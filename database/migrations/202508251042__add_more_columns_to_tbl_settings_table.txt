@@ -1,0 +1,1 @@
+ALTER TABLE `tbl_setting` ADD `termii_base_url` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `twilio_number`, ADD `termii_api_key` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `termii_base_url`;

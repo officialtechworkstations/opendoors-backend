@@ -1,0 +1,1 @@
+ALTER TABLE `tbl_property` ADD `party_allowed` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0' AFTER `is_sell`, ADD `party_cost` FLOAT(11,4) UNSIGNED NOT NULL DEFAULT '0.0000' AFTER `party_allowed`, ADD `is_featured` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0' AFTER `party_cost`, ADD `caution_fee` FLOAT(11,4) UNSIGNED NOT NULL DEFAULT '0.0000' AFTER `is_featured`;

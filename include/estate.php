@@ -1,156 +1,154 @@
-<?php 
+<?php
 require 'reconfig.php';
 $GLOBALS['rstate'] = $rstate;
-class Estate {
- 
-
-	function restatelogin($username,$password,$tblname) {
-		if($tblname == 'admin')
-		{
-		$q = "select * from ".$tblname." where username='".$username."' and password='".$password."'";
-	return $GLOBALS['rstate']->query($q)->num_rows;
-		}
-		else if($tblname == 'restate_details')
-		{
-			$q = "select * from ".$tblname." where email='".$username."' and password='".$password."'";
-	return $GLOBALS['rstate']->query($q)->num_rows;
-		}
-		else 
-		{
-			$q = "select * from ".$tblname." where email='".$username."' and password='".$password."' and status=1";
-	return $GLOBALS['rstate']->query($q)->num_rows;
-		}
-	}
-	
-	function restateinsertdata($field,$data,$table){
-
-    $field_values= implode(',',$field);
-    $data_values=implode("','",$data);
-
-    $sql = "INSERT INTO $table($field_values)VALUES('$data_values')";
-    $result=$GLOBALS['rstate']->query($sql);
-  return $result;
-  }
-  
-  
-
-  
-  function insmulti($field,$data,$table){
-
-    $field_values= implode(',',$field);
-    $data_values=implode("','",$data);
-
-    $sql = "INSERT INTO $table($field_values)VALUES('$data_values')";
-    $result=$GLOBALS['rstate']->multi_query($sql);
-  return $result;
-  }
-  
-  function restateinsertdata_id($field,$data,$table){
-
-    $field_values= implode(',',$field);
-    $data_values=implode("','",$data);
-
-    $sql = "INSERT INTO $table($field_values)VALUES('$data_values')";
-    $result=$GLOBALS['rstate']->query($sql);
-  return $GLOBALS['rstate']->insert_id;
-  }
-  
-  function restateinsertdata_Api($field,$data,$table){
-
-    $field_values= implode(',',$field);
-    $data_values=implode("','",$data);
-
-    $sql = "INSERT INTO $table($field_values)VALUES('$data_values')";
-    $result=$GLOBALS['rstate']->query($sql);
-  return $result;
-  }
-  
-  function restateinsertdata_Api_Id($field,$data,$table){
-
-    $field_values= implode(',',$field);
-    $data_values=implode("','",$data);
-
-    $sql = "INSERT INTO $table($field_values)VALUES('$data_values')";
-    $result=$GLOBALS['rstate']->query($sql);
-  return $GLOBALS['rstate']->insert_id;
-  }
-  
-  function restateupdateData($field,$table,$where){
-$cols = array();
-
-    foreach($field as $key=>$val) {
-        if($val != NULL) // check if value is not null then only add that colunm to array
-        {
-			
-           $cols[] = "$key = '$val'"; 
-			
+class Estate
+{
+    function restatelogin($username, $password, $tblname)
+    {
+        if ($tblname == 'admin') {
+            $q = "select * from " . $tblname . " where username='" . $username . "' and password='" . $password . "'";
+            return $GLOBALS['rstate']->query($q)->num_rows;
+        }
+        else if ($tblname == 'restate_details') {
+            $q = "select * from " . $tblname . " where email='" . $username . "' and password='" . $password . "'";
+            return $GLOBALS['rstate']->query($q)->num_rows;
+        } else {
+            $q = "select * from " . $tblname . " where email='" . $username . "' and password='" . $password . "' and status=1";
+            return $GLOBALS['rstate']->query($q)->num_rows;
         }
     }
-    $sql = "UPDATE $table SET " . implode(', ', $cols) . " $where";
-$result=$GLOBALS['rstate']->query($sql);
-    return $result;
-  }
-  
-  
-  
-  
-   function restateupdateData_Api($field,$table,$where){
-$cols = array();
 
-    foreach($field as $key=>$val) {
-        if($val != NULL) // check if value is not null then only add that colunm to array
-        {
-           $cols[] = "$key = '$val'"; 
-        }
+    function restateinsertdata($field, $data, $table)
+    {
+        $field_values = implode(',', $field);
+        $data_values = implode("','", $data);
+
+        $sql = "INSERT INTO $table($field_values)VALUES('$data_values')";
+        $result = $GLOBALS['rstate']->query($sql);
+        return $result;
     }
-    $sql = "UPDATE $table SET " . implode(', ', $cols) . " $where";
-$result=$GLOBALS['rstate']->query($sql);
-    return $sql;
-  }
-  
-  function restateupdateDatanull_Api($field,$table,$where){
-$cols = array();
 
-    foreach($field as $key=>$val) {
-        if($val != NULL) // check if value is not null then only add that colunm to array
-        {
-           $cols[] = "$key = '$val'"; 
-        }
-		else 
-		{
-			$cols[] = "$key = NULL"; 
-		}
+    function insmulti($field, $data, $table)
+    {
+        $field_values = implode(',', $field);
+        $data_values = implode("','", $data);
+
+        $sql = "INSERT INTO $table($field_values)VALUES('$data_values')";
+        $result = $GLOBALS['rstate']->multi_query($sql);
+        return $result;
     }
-	
- $sql = "UPDATE $table SET " . implode(', ', $cols) . " $where";
-$result=$GLOBALS['rstate']->query($sql);
-    return $result;
-  }
-  
-  
-  
-  
-  function restateupdateData_single($field,$table,$where){
-$query = "UPDATE $table SET $field";
 
-$sql =  $query.' '.$where;
-$result=$GLOBALS['rstate']->query($sql);
-  return $result;
-  }
-  
-  function restaterestateDeleteData($where,$table){
+    function restateinsertdata_id($field, $data, $table)
+    {
 
-    $sql = "Delete From $table $where";
-    $result=$GLOBALS['rstate']->query($sql);
-  return $result;
-  }
-  
-  function restateDeleteData_Api($where,$table){
+        $field_values = implode(',', $field);
+        $data_values = implode("','", $data);
 
-    $sql = "Delete From $table $where";
-    $result=$GLOBALS['rstate']->query($sql);
-  return $result;
-  }
- 
+        $sql = "INSERT INTO $table($field_values)VALUES('$data_values')";
+        $result = $GLOBALS['rstate']->query($sql);
+        return $GLOBALS['rstate']->insert_id;
+    }
+
+    function restateinsertdata_Api($field, $data, $table)
+    {
+
+        $field_values = implode(',', $field);
+        $data_values = implode("','", $data);
+
+        $sql = "INSERT INTO $table($field_values)VALUES('$data_values')";
+        $result = $GLOBALS['rstate']->query($sql);
+        return $result;
+    }
+
+    function restateinsertdata_Api_Id($field, $data, $table)
+    {
+
+        $field_values = implode(',', $field);
+        $data_values = implode("','", $data);
+
+        $sql = "INSERT INTO $table($field_values)VALUES('$data_values')";
+        $result = $GLOBALS['rstate']->query($sql);
+        return $GLOBALS['rstate']->insert_id;
+    }
+
+    function restateupdateData($field, $table, $where)
+    {
+        $cols = array();
+
+        foreach ($field as $key => $val)
+        {
+            if ($val != NULL) // check if value is not null then only add that colunm to array
+            
+            {
+
+                $cols[] = "$key = '$val'";
+
+            }
+        }
+        $sql = "UPDATE $table SET " . implode(', ', $cols) . " $where";
+        $result = $GLOBALS['rstate']->query($sql);
+        return $result;
+    }
+
+    function restateupdateData_Api($field, $table, $where)
+    {
+        $cols = array();
+
+        foreach ($field as $key => $val)
+        {
+            if ($val != NULL) // check if value is not null then only add that colunm to array
+            
+            {
+                $cols[] = "$key = '$val'";
+            }
+        }
+        $sql = "UPDATE $table SET " . implode(', ', $cols) . " $where";
+        $result = $GLOBALS['rstate']->query($sql);
+        return $sql;
+    }
+
+    function restateupdateDatanull_Api($field, $table, $where)
+    {
+        $cols = array();
+
+        foreach ($field as $key => $val)
+        {
+			// check if value is not null then only add that colunm to array
+            if ($val != NULL) {
+                $cols[] = "$key = '$val'";
+            } else {
+                $cols[] = "$key = NULL";
+            }
+        }
+
+        $sql = "UPDATE $table SET " . implode(', ', $cols) . " $where";
+        $result = $GLOBALS['rstate']->query($sql);
+        return $result;
+    }
+
+    function restateupdateData_single($field, $table, $where)
+    {
+        $query = "UPDATE $table SET $field";
+
+        $sql = $query . ' ' . $where;
+        $result = $GLOBALS['rstate']->query($sql);
+        return $result;
+    }
+
+    function restaterestateDeleteData($where, $table)
+    {
+
+        $sql = "Delete From $table $where";
+        $result = $GLOBALS['rstate']->query($sql);
+        return $result;
+    }
+
+    function restateDeleteData_Api($where, $table)
+    {
+
+        $sql = "Delete From $table $where";
+        $result = $GLOBALS['rstate']->query($sql);
+        return $result;
+    }
+
 }
-?>
