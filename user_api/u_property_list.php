@@ -13,10 +13,14 @@ if ($uid == '') {
 } else {
 $pol = array();
 $c = array();
-$sel = $rstate->query("SELECT tbl_property.*,(SELECT GROUP_CONCAT(`title`) from `tbl_facility` WHERE find_in_set(tbl_facility.id,tbl_property.facility)) as facility_select FROM tbl_property where tbl_property.add_user_id=".$uid."");
-while($row = $sel->fetch_assoc())
-{
-   
+$sel = $rstate->query("SELECT tbl_property.*, (
+	SELECT GROUP_CONCAT(`title`) 
+	FROM `tbl_facility` 
+	WHERE find_in_set(tbl_facility.id,tbl_property.facility)) as facility_select 
+		FROM tbl_property 
+		WHERE tbl_property.add_user_id = ".$uid."
+	ORDER BY tbl_property.is_featured DESC, tbl_property.rate DESC, tbl_property.price DESC");
+while($row = $sel->fetch_assoc()) {
 		$pol['id'] = $row['id'];
 		$pol['title'] = $row['title'];
 		$type = $rstate->query("select * from tbl_category where id=".$row['ptype']."")->fetch_assoc();
@@ -36,6 +40,9 @@ while($row = $sel->fetch_assoc())
 		$pol['mobile'] = $row['mobile'];
 		$pol['buyorrent'] = $row['pbuysell'];
 		$pol['city'] = $row['city'];
+		$pol['party_allowed'] = $row['party_allowed'];
+		$pol['party_cost'] = $row['party_cost'];
+		$pol['caution_fee'] = $row['caution_fee'];
 		$checkrate = $rstate->query("SELECT *  FROM tbl_book where prop_id=".$row['id']." and book_status='Completed' and total_rate !=0")->num_rows;
 		if($checkrate !=0)
 		{

@@ -1,0 +1,1 @@
+ALTER TABLE `tbl_property` CHANGE `party_cost` `party_cost` FLOAT(11,2) UNSIGNED NOT NULL DEFAULT '0.00', CHANGE `caution_fee` `caution_fee` FLOAT(11,2) UNSIGNED NOT NULL DEFAULT '0.00';

@@ -9,6 +9,7 @@ $keyword = $data["keyword"];
 $country_id = $data["country_id"];
 $facility = $data['facility'];
 $price = $data['price'];
+$is_featured = $data['is_featured'];
 
 if (($keyword == "" && $price == "" && empty($facility)) or $uid == "" or $country_id == "") {
     $returnArr = [
@@ -34,6 +35,10 @@ if (($keyword == "" && $price == "" && empty($facility)) or $uid == "" or $count
 
     if ($price) {
         $additional_query .= ' AND price <= '.$price;
+    }
+
+    if ($is_featured) {
+        $additional_query .= ' AND `is_featured` = 1';
     }
 
     if ($uid == 0) {
