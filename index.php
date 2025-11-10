@@ -1,5 +1,5 @@
-<?php 
-if(isset($_SESSION['restatename'])) {
+<?php
+if (isset($_SESSION['restatename'])) {
 	header('Location: dashboard.php');
 	exit;
 }
@@ -12,41 +12,41 @@ if(isset($_SESSION['restatename'])) {
 		<div class="col-12 p-0">
 			<div class="login-card">
 				<div>
-					<div><a class="logo" href="#"><img class="img-fluid for-light" src="<?php echo $set['weblogo'];?>" alt="logo image"></a></div>
-					<div class="login-main"> 
+					<div><a class="logo" href="#"><img class="img-fluid for-light" src="<?php echo $set['weblogo']; ?>" alt="logo image"></a></div>
+					<div class="login-main">
 						<form class="theme-form">
 							<h2 class="text-center">Sign in to account</h2>
 							<p class="text-center">Enter your username & password to login</p>
 							<div class="form-group">
-							<label class="col-form-label">Username</label>
-							<input class="form-control" type="text" required="" name="username" placeholder="ZYZ">
-							<input type="hidden" name="type" value="login"/>
+								<label class="col-form-label">Username</label>
+								<input class="form-control" type="text" required="" name="username" placeholder="ZYZ">
+								<input type="hidden" name="type" value="login" />
 							</div>
 							<div class="form-group">
-							<label class="col-form-label">Password</label>
-							<div class="form-input position-relative">
-								<input class="form-control" type="password" name="password" required="" placeholder="*********">
-								
+								<label class="col-form-label">Password</label>
+								<div class="form-input position-relative">
+									<input class="form-control" type="password" name="password" required="" placeholder="*********">
+
+								</div>
 							</div>
-							</div>
-							
+
 							<div class="form-group">
-							<label class="col-form-label">Select User Type</label>
-							<select class="form-control" name="stype" required>
-							<option value="">Select A Type</option>
-							<option value="Admin">Admin</option>
-							<option value="Staff">Staff</option>
-							</select>
+								<label class="col-form-label">Select User Type</label>
+								<select class="form-control" name="stype" required>
+									<option value="">Select A Type</option>
+									<option value="Admin">Admin</option>
+									<option value="Staff">Staff</option>
+								</select>
 							</div>
-							
-							
+
+
 							<div class="form-group mb-0">
-							
-							<div class="text-end mt-3">
-								<button class="btn btn-primary btn-block w-100" type="submit">Sign in                 </button>
+
+								<div class="text-end mt-3">
+									<button class="btn btn-primary btn-block w-100" type="submit">Sign in </button>
+								</div>
 							</div>
-							</div>
-							
+
 						</form>
 					</div>
 				</div>
@@ -57,4 +57,5 @@ if(isset($_SESSION['restatename'])) {
 	<?php require 'include/footer.php'; ?>
 </div>
 </body>
+
 </html>

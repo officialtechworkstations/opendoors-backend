@@ -491,6 +491,7 @@ if (isset($_POST["type"])) {
         $newfilename = round(microtime(true)) . "." . end($temp);
         $target_file = $target_dir . basename($newfilename);
         $url = $url . basename($newfilename);
+        $h = new Estate();
         if ($_FILES["weblogo"]["name"] != "") {
             move_uploaded_file($_FILES["weblogo"]["tmp_name"], $target_file);
             $table = "tbl_setting";
@@ -517,7 +518,6 @@ if (isset($_POST["type"])) {
             ];
 
             $where = "where id=" . $id . "";
-            $h = new Estate();
             $check = $h->restateupdateData($field, $table, $where);
 
             if ($check == 1) {
@@ -552,7 +552,6 @@ if (isset($_POST["type"])) {
                 "notice_message" => $notice_message,
             ];
             $where = "where id=" . $id . "";
-            $h = new Estate();
             $check = $h->restateupdateData($field, $table, $where);
             if ($check == 1) {
                 $returnArr = [
@@ -564,6 +563,67 @@ if (isset($_POST["type"])) {
                 ];
             }
         }
+    } elseif ($_POST["type"] == "save_commission") {
+        $comm_id = $_POST["comm_id"];
+        $user_type = $_POST["user_type"];
+        $amount = $_POST["amount"];
+        $amount_type = $_POST["amount_type"];
+        $max_amount = $_POST["max_amount"] ? $_POST["max_amount"] : 0;
+        $range_from = $_POST["range_from"] ? $_POST["range_from"] : 0;
+        $range_to = $_POST["range_to"] ? $_POST["range_to"] : 0;
+        $is_active = $_POST["is_active"] ? 1 : 0;
+
+        try {
+            $h = new Estate();
+
+            if ($comm_id) {
+                $db_rate = $rstate->query("SELECT * FROM `tbl_booking_commission` WHERE `id` = '$comm_id' LIMIT 1");
+
+                if ($db_rate->num_rows) {
+                    // Update the rows 
+                    $h->restateupdateData([
+                        'amount' => $amount,
+                        'amount_type' => $amount_type,
+                        'max_amount' => $max_amount,
+                        'range_from' => $range_from,
+                        'range_to' => $range_to,
+                        'is_active' => $is_active,
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ], 'tbl_booking_commission', "WHERE `id` = '$comm_id'");
+                } 
+            } else {
+                $h->restateinsertdata_Api_Id([
+                    'user_type',
+                    'amount',
+                    'amount_type',
+                    'max_amount',
+                    'range_from',
+                    'range_to',
+                    'is_active',
+                    'created_at',
+                ], [
+                    $user_type,
+                    $amount,
+                    $amount_type,
+                    $max_amount,
+                    $range_from,
+                    $range_to,
+                    $is_active,
+                    date('Y-m-d H:i:s'),
+                ], 'tbl_booking_commission');
+            }
+        } catch (\Throwable $th) {
+            var_dump($th->getMessage()); exit;
+        }
+
+        $returnArr = [
+            "comm_id" => $comm_id,
+            "ResponseCode" => "200",
+            "Result" => "true",
+            "title" => "Booking commission saved successfully!",
+            "message" => "Booking Commission section!",
+            "action" => "booking-commission.php",
+        ];
     } elseif ($_POST["type"] == "add_category") {
         $okey = $_POST["status"];
         $title = $rstate->real_escape_string($_POST["title"]);

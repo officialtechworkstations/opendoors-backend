@@ -14,7 +14,7 @@ if($_SESSION['stype'] == 'Staff') { ?>
 <div class="page-wrapper compact-wrapper" id="pageWrapper">
 	<!-- Page Header Start-->
 	<?php require 'include/inside_top.php'; ?>
-	<!-- Page Header Ends                              -->
+	<!-- Page Header Ends -->
 	<!-- Page Body Start-->
 	<div class="page-body-wrapper">
 		<!-- Page Sidebar Start-->
