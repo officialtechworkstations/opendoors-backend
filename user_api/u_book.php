@@ -2,10 +2,12 @@
 require dirname(dirname(__FILE__)) . '/include/reconfig.php';
 require dirname(dirname(__FILE__)) . '/include/estate.php';
 header('Content-type: text/json');
-$data = json_decode(file_get_contents('php://input') , true);
-if ($data['prop_id'] == '' or $data['uid'] == '' or $data['check_in'] == '' 
-    or $data['check_out'] == '' or $data['subtotal'] == '' or $data['total'] == '' or $data['tax'] == '' 
-    or $data['p_method_id'] == '' or $data['book_for'] == '' or $data['prop_price'] == '') {
+$data = json_decode(file_get_contents('php://input'), true);
+if (
+    $data['prop_id'] == '' or $data['uid'] == '' or $data['check_in'] == ''
+    or $data['check_out'] == '' or $data['subtotal'] == '' or $data['total'] == '' or $data['tax'] == ''
+    or $data['p_method_id'] == '' or $data['book_for'] == '' or $data['prop_price'] == ''
+) {
     $returnArr = array(
         "ResponseCode" => "401",
         "Result" => "false",
@@ -255,17 +257,13 @@ if ($data['prop_id'] == '' or $data['uid'] == '' or $data['check_in'] == ''
                     "wallet" => $tbwallet['wallet'],
                     "book_id" => $oid
                 );
-
-            }
-            else
-            {
+            } else {
                 $returnArr = array(
                     "ResponseCode" => "401",
                     "Result" => "false",
                     "ResponseMsg" => "Not Try Other Options!!"
                 );
             }
-
         }
 
         $udata = $rstate->query("select * from tbl_user where id=" . $uid . "")->fetch_assoc();
@@ -282,11 +280,11 @@ if ($data['prop_id'] == '' or $data['uid'] == '' or $data['check_in'] == ''
             'app_id' => $set['one_key'],
             'included_segments' => array(
                 "Active Users"
-            ) ,
+            ),
             'data' => array(
                 "order_id" => $oid,
                 "type" => 'normal'
-            ) ,
+            ),
             'filters' => array(
                 array(
                     'field' => 'tag',
@@ -294,7 +292,7 @@ if ($data['prop_id'] == '' or $data['uid'] == '' or $data['check_in'] == ''
                     'relation' => '=',
                     'value' => $uid
                 )
-            ) ,
+            ),
             'contents' => $content,
             'headings' => $heading
         );
@@ -336,10 +334,7 @@ if ($data['prop_id'] == '' or $data['uid'] == '' or $data['check_in'] == ''
 
         $h = new Estate();
         $h->restateinsertdata_Api($field_values, $data_values, $table);
-
-    }
-    else
-    {
+    } else {
         $tbwallet = $rstate->query("select * from tbl_user where id=" . $uid . "")->fetch_assoc();
         $returnArr = array(
             "ResponseCode" => "200",

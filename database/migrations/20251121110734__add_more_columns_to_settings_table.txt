@@ -1,0 +1,10 @@
+ALTER TABLE
+    `tbl_setting` ADD `package_name` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `notice_message`,
+    ADD `playstore_url` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `package_name`,
+    ADD `playstore_version` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `playstore_url`,
+    ADD `playstore_buildnumber` INT(11) NULL DEFAULT NULL AFTER `playstore_version`,
+    ADD `appstore_url` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `playstore_buildnumber`,
+    ADD `appstore_version` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `appstore_url`,
+    ADD `appstore_buildnumber` INT(11) NULL DEFAULT NULL AFTER `appstore_version`;
+
+ALTER TABLE `tbl_setting` ADD `termii_sender_id` VARCHAR(255) NULL DEFAULT NULL AFTER `termii_base_url`;

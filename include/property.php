@@ -476,6 +476,7 @@ if (isset($_POST["type"])) {
         $auth_token = $_POST["auth_token"];
         $twilio_number = $_POST["twilio_number"];
         $termii_base_url = $_POST["termii_base_url"];
+        $termii_sender_id = $_POST["termii_sender_id"];
         $termii_api_key = $_POST["termii_api_key"];
         $wlimit = $_POST["wlimit"];
         $one_key = $_POST["one_key"];
@@ -484,6 +485,14 @@ if (isset($_POST["type"])) {
         $scredit = $_POST["scredit"];
         $rcredit = $_POST["rcredit"];
         $notice_message = $_POST["notice_message"];
+
+        $package_name = $_POST["package_name"];
+        $playstore_url = $_POST["playstore_url"];
+        $playstore_version = $_POST["playstore_version"];
+        $playstore_buildnumber = $_POST["playstore_buildnumber"];
+        $appstore_url = $_POST["appstore_url"];
+        $appstore_version = $_POST["appstore_version"];
+        $appstore_buildnumber = $_POST["appstore_buildnumber"];
 
         $target_dir = dirname(dirname(__FILE__)) . "/images/website/";
         $url = "images/website/";
@@ -502,6 +511,7 @@ if (isset($_POST["type"])) {
                 "auth_token" => $auth_token,
                 "acc_id" => $acc_id,
                 "termii_base_url" => $termii_base_url,
+                "termii_sender_id" => $termii_sender_id,
                 "termii_api_key" => $termii_api_key,
                 "otp_id" => $otp_id,
                 "auth_key" => $auth_key,
@@ -515,6 +525,13 @@ if (isset($_POST["type"])) {
                 "rcredit" => $rcredit,
                 "wlimit" => $wlimit,
                 "notice_message" => $notice_message,
+                "package_name" => $package_name,
+                "playstore_url" => $playstore_url,
+                "playstore_version" => $playstore_version,
+                "playstore_buildnumber" => $playstore_buildnumber,
+                "appstore_url" => $appstore_url,
+                "appstore_version" => $appstore_version,
+                "appstore_buildnumber" => $appstore_buildnumber,
             ];
 
             $where = "where id=" . $id . "";
@@ -538,6 +555,7 @@ if (isset($_POST["type"])) {
                 "auth_token" => $auth_token,
                 "acc_id" => $acc_id,
                 "termii_base_url" => $termii_base_url,
+                "termii_sender_id" => $termii_sender_id,
                 "termii_api_key" => $termii_api_key,
                 "otp_id" => $otp_id,
                 "auth_key" => $auth_key,
@@ -550,6 +568,13 @@ if (isset($_POST["type"])) {
                 "rcredit" => $rcredit,
                 "wlimit" => $wlimit,
                 "notice_message" => $notice_message,
+                "package_name" => $package_name,
+                "playstore_url" => $playstore_url,
+                "playstore_version" => $playstore_version,
+                "playstore_buildnumber" => $playstore_buildnumber,
+                "appstore_url" => $appstore_url,
+                "appstore_version" => $appstore_version,
+                "appstore_buildnumber" => $appstore_buildnumber,
             ];
             $where = "where id=" . $id . "";
             $check = $h->restateupdateData($field, $table, $where);

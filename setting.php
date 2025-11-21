@@ -123,6 +123,10 @@ if($_SESSION['stype'] == 'Staff') { ?>
 											<input type="text" class="form-control " placeholder="Termii Base URL"  value="<?php echo $set['termii_base_url'];?>" name="termii_base_url" />
 										</div>
 										<div class="form-group mb-3 col-4">
+											<label><span class="text-danger">*</span> Termii Sender ID</label>
+											<input type="text" class="form-control " placeholder="Termii Sender ID"  value="<?php echo $set['termii_sender_id'];?>" name="termii_sender_id" />
+										</div>
+										<div class="form-group mb-3 col-4">
 											<label><span class="text-danger">*</span>Termii Api Key</label>
 											<input type="text" class="form-control " placeholder="Termii Api Key"  value="<?php echo $set['termii_api_key'];?>" name="termii_api_key" />
 										</div>
@@ -179,6 +183,50 @@ if($_SESSION['stype'] == 'Staff') { ?>
 											<label><span class="text-danger">*</span> Message</label>
                                             <textarea class="form-control" name="notice_message" id="notice_message" cols="30" rows="10"><?php echo $set['notice_message'];?></textarea>
 										</div>
+
+										<hr />
+
+										<div class="form-group mb-3 col-12">
+											<h5 class="h5_set"><i class="fa fa-rocket" aria-hidden="true"></i> Force Update</h5>
+										</div>
+										
+										<div class="form-group mb-3 col-12">
+											<label><span class="text-danger">*</span> Package Name</label>
+											<input type="text" class="form-control" placeholder="Package Name"  value="<?php echo $set['package_name'];?>" name="package_name" required="">
+										</div>
+
+										<div class="form-group mb-3 col-12">
+											<h5 class="h5_set"><i class="fab fa-android" aria-hidden="true"></i> Android</h5>
+										</div>
+										<div class="form-group mb-3 col-4">
+											<label><span class="text-danger">*</span> Store URL</label>
+											<input type="text" class="form-control" placeholder="Store URL"  value="<?php echo $set['playstore_url'];?>" name="playstore_url" required="">
+										</div>
+										<div class="form-group mb-3 col-4">
+											<label><span class="text-danger">*</span> Version</label>
+											<input type="text" class="form-control" placeholder="Version"  value="<?php echo $set['playstore_version'];?>" name="playstore_version" required="">
+										</div>
+										<div class="form-group mb-3 col-4">
+											<label><span class="text-danger">*</span> Build Number</label>
+											<input type="text" class="form-control numberonly" placeholder="Build Number"  value="<?php echo $set['playstore_buildnumber'];?>" name="playstore_buildnumber" required="">
+										</div>
+
+										<div class="form-group mb-3 col-12">
+											<h5 class="h5_set"><i class="fab fa-apple" aria-hidden="true"></i> IOS</h5>
+										</div>
+										<div class="form-group mb-3 col-4">
+											<label><span class="text-danger">*</span> Store URL</label>
+											<input type="text" class="form-control" placeholder="Store URL"  value="<?php echo $set['appstore_url'];?>" name="appstore_url" required="">
+										</div>
+										<div class="form-group mb-3 col-4">
+											<label><span class="text-danger">*</span> Version</label>
+											<input type="text" class="form-control" placeholder="Version"  value="<?php echo $set['appstore_version'];?>" name="appstore_version" required="">
+										</div>
+										<div class="form-group mb-3 col-4">
+											<label><span class="text-danger">*</span> Build Number</label>
+											<input type="text" class="form-control numberonly" placeholder="Build Number"  value="<?php echo $set['appstore_buildnumber'];?>" name="appstore_buildnumber" required="">
+										</div>
+
 										<div class="col-12">
 											<button type="submit" name="edit_setting" class="btn btn-primary mb-2">Edit Setting</button>
 										</div>

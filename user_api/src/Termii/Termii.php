@@ -22,7 +22,7 @@ class Termii {
             $data = [
                 "api_key" => $termii['termii_api_key'], 
                 "to" => $receiver,  
-                "from" => "OpenDoors",
+                "from" => $termii['termii_sender_id'],
                 "sms" => $message_body,
                 "type" => "plain", 
                 "channel" => "generic"
