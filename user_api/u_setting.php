@@ -19,13 +19,14 @@ if ($settings->num_rows > 0) {
         "appstore_url" => $data['appstore_url'],
         "appstore_version" => $data['appstore_version'],
         "appstore_buildnumber" => $data['appstore_buildnumber'],
+        "app_force_update" => $data['app_force_update'],
     ];
 }
 $returnArr = [
     "FaqData" => $response,
-    "ResponseCode" => "200",
+    "ResponseCode" => 200,
     "Result" => "true",
-    "ResponseMsg" => "Faq List Get Successfully!!"
+    "ResponseMsg" => "Settings data retrieved"
 ];
 echo json_encode($returnArr);
 exit;

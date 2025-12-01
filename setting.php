@@ -227,6 +227,13 @@ if($_SESSION['stype'] == 'Staff') { ?>
 											<input type="text" class="form-control numberonly" placeholder="Build Number"  value="<?php echo $set['appstore_buildnumber'];?>" name="appstore_buildnumber" required="">
 										</div>
 
+										<div class="form-group mb-3 col-4">
+											  <div class="form-group form-check">
+												<input type="checkbox" class="form-check-input" id="app_force_update" name="app_force_update" value="1">
+												<label class="form-check-label" for="app_force_update">Force Update</label>
+											</div>
+										</div>
+
 										<div class="col-12">
 											<button type="submit" name="edit_setting" class="btn btn-primary mb-2">Edit Setting</button>
 										</div>

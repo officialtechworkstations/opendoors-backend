@@ -493,6 +493,7 @@ if (isset($_POST["type"])) {
         $appstore_url = $_POST["appstore_url"];
         $appstore_version = $_POST["appstore_version"];
         $appstore_buildnumber = $_POST["appstore_buildnumber"];
+        $app_force_update = $_POST["app_force_update"];
 
         $target_dir = dirname(dirname(__FILE__)) . "/images/website/";
         $url = "images/website/";
@@ -532,6 +533,7 @@ if (isset($_POST["type"])) {
                 "appstore_url" => $appstore_url,
                 "appstore_version" => $appstore_version,
                 "appstore_buildnumber" => $appstore_buildnumber,
+                "app_force_update" => $app_force_update,
             ];
 
             $where = "where id=" . $id . "";
@@ -575,6 +577,7 @@ if (isset($_POST["type"])) {
                 "appstore_url" => $appstore_url,
                 "appstore_version" => $appstore_version,
                 "appstore_buildnumber" => $appstore_buildnumber,
+                "app_force_update" => $app_force_update,
             ];
             $where = "where id=" . $id . "";
             $check = $h->restateupdateData($field, $table, $where);
