@@ -493,7 +493,7 @@ if (isset($_POST["type"])) {
         $appstore_url = $_POST["appstore_url"];
         $appstore_version = $_POST["appstore_version"];
         $appstore_buildnumber = $_POST["appstore_buildnumber"];
-        $app_force_update = $_POST["app_force_update"];
+        $app_force_update = $_POST["app_force_update"] ? "1" : "0";
 
         $target_dir = dirname(dirname(__FILE__)) . "/images/website/";
         $url = "images/website/";
