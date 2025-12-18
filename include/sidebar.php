@@ -350,6 +350,36 @@ if (isset($_SESSION['restatename'])) {
 							</ul>
 						</li>
 						<li class="sidebar-list">
+							<a class="sidebar-link sidebar-title link-nav" href="required-documents.php">
+								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<g>
+										<g>
+											<!-- Document outline -->
+											<path fill-rule="evenodd" clip-rule="evenodd"
+												d="M7.5 2.75H13.75L18.25 7.25V20.25C18.25 21.2165 17.4665 22 16.5 22H7.5C6.5335 22 5.75 21.2165 5.75 20.25V4.5C5.75 3.5335 6.5335 2.75 7.5 2.75Z"
+												stroke="#130F26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+
+											<!-- Folded corner -->
+											<path d="M13.5 2.75V7.25H18"
+												stroke="#130F26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+
+											<!-- Upload arrow -->
+											<path d="M12 17V11"
+												stroke="#130F26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+
+											<path d="M9.5 13.5L12 11L14.5 13.5"
+												stroke="#130F26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+
+											<!-- Base line -->
+											<path d="M9 19H15"
+												stroke="#130F26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+										</g>
+									</g>
+								</svg>
+								<span>Required Documents</span>
+							</a>
+						</li>
+						<li class="sidebar-list">
 							<a class="sidebar-link sidebar-title link-nav" href="userlist.php">
 								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 									<g>
@@ -362,6 +392,41 @@ if (isset($_SESSION['restatename'])) {
 									</g>
 								</svg>
 								<span>User List</span>
+							</a>
+						</li>
+						<li class="sidebar-list">
+							<a class="sidebar-link sidebar-title link-nav" href="user-documents.php">
+								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<g>
+										<g>
+											<!-- User head -->
+											<path fill-rule="evenodd" clip-rule="evenodd"
+												d="M7.75 7.25C7.75 5.45507 9.20507 4 11 4C12.7949 4 14.25 5.45507 14.25 7.25C14.25 9.04493 12.7949 10.5 11 10.5C9.20507 10.5 7.75 9.04493 7.75 7.25Z"
+												stroke="#130F26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+
+											<!-- User body -->
+											<path fill-rule="evenodd" clip-rule="evenodd"
+												d="M4.5 19C4.5 16.7909 7.41015 15 11 15C14.5899 15 17.5 16.7909 17.5 19"
+												stroke="#130F26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+
+											<!-- Document -->
+											<path fill-rule="evenodd" clip-rule="evenodd"
+												d="M15.5 3.75H18.25L21 6.5V14.75C21 15.7165 20.2165 16.5 19.25 16.5H15.5"
+												stroke="#130F26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+
+											<!-- Document fold -->
+											<path d="M18.25 3.75V6.5H21"
+												stroke="#130F26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+
+											<!-- Upload arrow -->
+											<path d="M11 20V16"
+												stroke="#130F26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+											<path d="M9.5 17.5L11 16L12.5 17.5"
+												stroke="#130F26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+										</g>
+									</g>
+								</svg>
+								<span>User Documents</span>
 							</a>
 						</li>
 						<li class="sidebar-list">

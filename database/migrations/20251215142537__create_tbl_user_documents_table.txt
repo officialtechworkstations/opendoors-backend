@@ -1,0 +1,17 @@
+CREATE TABLE `tbl_user_documents` (
+ `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+ `document_id` int(11) unsigned DEFAULT NULL,
+ `user_id` int(11) unsigned DEFAULT NULL,
+ `file_path` varchar(255) DEFAULT NULL,
+ `file_type` varchar(100) DEFAULT NULL,
+ `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+ `reason` longtext DEFAULT NULL,
+ `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+ `updated_at` timestamp NOT NULL DEFAULT current_timestamp(),
+ `deleted_at` timestamp NULL DEFAULT NULL,
+ PRIMARY KEY (`id`),
+ KEY `document_id` (`document_id`),
+ KEY `user_id` (`user_id`),
+ KEY `status` (`status`),
+ KEY `deleted_at` (`deleted_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci

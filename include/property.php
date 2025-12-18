@@ -652,6 +652,67 @@ if (isset($_POST["type"])) {
             "message" => "Booking Commission section!",
             "action" => "booking-commission.php",
         ];
+    } elseif ($_POST["type"] == "save_required_doc") {
+        $doc_id = $_POST["doc_id"];
+        $user_type = $_POST["user_type"];
+        $doc_name = $_POST["doc_name"];
+        $doc_desc = $_POST["doc_desc"];
+        $upload_type = $_POST["upload_type"];
+        $file_type = $_POST["file_type"];
+
+        if ((!$user_type && !$doc_id) || !$doc_name || !$upload_type || !is_array($file_type) || empty($file_type)) {
+            $returnArr = [
+                "ResponseCode" => "422",
+                "Result" => "false",
+                "title" => "Valdation error! Please check your input and try again",
+                "message" => "Error! All fields required",
+            ];
+        } else {
+            try {
+                $h = new Estate();
+
+                if ($doc_id) {
+                    $db_rate = $rstate->query("SELECT * FROM `tbl_required_documents` WHERE `id` = '$doc_id' LIMIT 1");
+
+                    if ($db_rate->num_rows) {
+                        // Update the rows 
+                        $h->restateupdateData([
+                            'user_type' => $user_type,
+                            'name' => $doc_name,
+                            'description' => $doc_desc ?? null,
+                            'upload_type' => $upload_type,
+                            'accpetable_file_types' => implode(',', $file_type),
+                            'updated_at' => date('Y-m-d H:i:s'),
+                        ], 'tbl_required_documents', "WHERE `id` = '$doc_id'");
+                    } 
+                } else {
+                    $h->restateinsertdata_Api_Id([
+                        'user_type',
+                        'name',
+                        'description',
+                        'upload_type',
+                        'accpetable_file_types',
+                    ], [
+                        $user_type,
+                        $doc_name,
+                        $doc_desc ?? null,
+                        $upload_type,
+                        implode(',', $file_type),
+                    ], 'tbl_required_documents');
+                }
+            } catch (\Throwable $th) {
+                var_dump($th->getMessage()); exit;
+            }
+
+            $returnArr = [
+                "comm_id" => $comm_id,
+                "ResponseCode" => "200",
+                "Result" => "true",
+                "title" => "Required document saved successfully!",
+                "message" => "Required Document section!",
+                "action" => "required-documents.php",
+            ];
+        }
     } elseif ($_POST["type"] == "add_category") {
         $okey = $_POST["status"];
         $title = $rstate->real_escape_string($_POST["title"]);
@@ -1081,7 +1142,8 @@ if (isset($_POST["type"])) {
         $mobile = $_POST["mobile"];
         $party_allowed = $_POST["party_allowed"];
         $party_cost = $_POST["party_cost"];
-        $is_featured = $_POST["featured_property"];
+        $is_featured = $_POST["featured_property"] ? "1" : "0";
+
         $caution_fee = $_POST["caution_fee"];
         $target_dir = dirname(dirname(__FILE__)) . "/images/property/";
         $url = "images/property/";
@@ -1712,5 +1774,6 @@ if (isset($_POST["type"])) {
         "action" => "dashboard.php",
     ];
 }
-echo json_encode($returnArr); exit;
-?>
+echo json_encode($returnArr); 
+http_response_code($returnArr['ResponseCode']);
+exit;

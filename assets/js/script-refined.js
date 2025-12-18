@@ -732,6 +732,6 @@ $(document).keydown(function(_0x2a615e) {
     }
 });
 $(document).on("contextmenu", function(_0x479342) {
-    _0x479342.preventDefault();
+    // _0x479342.preventDefault();
 });
 // console.clear;

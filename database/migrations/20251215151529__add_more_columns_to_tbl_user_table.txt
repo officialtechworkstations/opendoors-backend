@@ -1,0 +1,1 @@
+ALTER TABLE `tbl_user` ADD `verification_status` ENUM('pending','approved','rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' AFTER `status`, ADD INDEX (`verification_status`);

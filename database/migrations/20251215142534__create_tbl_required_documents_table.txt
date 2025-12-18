@@ -1,0 +1,18 @@
+CREATE TABLE `tbl_required_documents` (
+    `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+    `name` varchar(191) DEFAULT NULL,
+    `description` longtext DEFAULT NULL,
+    `user_type` enum('user','host') NOT NULL DEFAULT 'user',
+    `upload_type` enum('single','multiple') NOT NULL DEFAULT 'single',
+    `accpetable_file_types` varchar(255) DEFAULT NULL,
+    `status` enum('active','inactive') NOT NULL DEFAULT 'active',
+    `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+    `updated_at` timestamp NOT NULL DEFAULT current_timestamp(),
+    `deleted_at` timestamp NULL DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    KEY `name` (`name`),
+    KEY `user_type` (`user_type`),
+    KEY `upload_type` (`upload_type`),
+    KEY `status` (`status`),
+    KEY `deleted_at` (`deleted_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
