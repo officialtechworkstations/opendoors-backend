@@ -5,10 +5,15 @@ header('Content-type: text/json');
 $user_type = $data['user_type'];
 $uid = $data['uid'];
 
-$settings = $rstate->query("SELECT * FROM `tbl_required_documents` WHERE `deleted_at` IS NULL AND `user_type` = '$user_type'  ORDER BY `created_at` DESC ");
+$documents = $rstate->query("SELECT * 
+                            FROM `tbl_required_documents` 
+                            WHERE `user_type` = '$user_type' 
+                                AND `status` = 'active' 
+                                AND `deleted_at` IS NULL 
+                                ORDER BY `created_at` DESC");
 $response = [];
-if ($settings->num_rows > 0) {
-    $row = $settings->fetch_assoc();
+if ($documents->num_rows > 0) {
+    $row = $documents->fetch_assoc();
 
     do {
         $response[] = [
@@ -17,7 +22,7 @@ if ($settings->num_rows > 0) {
             'upload_type' => $row['upload_type'],
             'accpetable_file_types' => explode(',', $row['accpetable_file_types']),
         ];
-    } while ($row = $settings->fetch_assoc());
+    } while ($row = $documents->fetch_assoc());
 }
 $returnArr = [
     "documents" => $response,
