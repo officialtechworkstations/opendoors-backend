@@ -13,3 +13,4 @@ build/
 *.tmp
 *.swp
 *.pid
+error_log

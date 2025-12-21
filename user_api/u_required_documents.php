@@ -17,6 +17,7 @@ if ($documents->num_rows > 0) {
 
     do {
         $response[] = [
+            'id' => $row['id'],
             'name' => $row['name'],
             'description' => $row['description'],
             'upload_type' => $row['upload_type'],
