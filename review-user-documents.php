@@ -147,6 +147,7 @@ if($_SESSION['stype'] == 'Staff') { ?>
 																	tbl_user_documents ud
 																	WHERE ud.deleted_at IS NULL
 																		AND ud.document_id = '{$document['document_id']}'
+																		AND ud.user_id = '{$user_id}'
 																		AND EXISTS (
 																			SELECT id FROM 
 																			tbl_required_documents rd 

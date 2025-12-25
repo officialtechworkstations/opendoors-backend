@@ -86,6 +86,8 @@ if ($doc['upload_type'] == 'single') {
 
 $storedFiles = [];
 
+logger("Uploading {$fileCount} files for document ID {$document_id} by user ID {$uid}");
+
 for ($i = 0; $i < $fileCount; $i++) {
     $error = is_array($files['error']) ? $files['error'][$i] : $files['error'];
     $tmp   = is_array($files['tmp_name']) ? $files['tmp_name'][$i] : $files['tmp_name'];
@@ -126,6 +128,8 @@ for ($i = 0; $i < $fileCount; $i++) {
 
     $storedFiles[] = $newName;
 }
+
+logger("Stored files: " . implode(', ', $storedFiles));
 
 if (count($storedFiles)) {
     // Delete existing document first before re-uploading
