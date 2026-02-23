@@ -55,14 +55,12 @@ class Termii {
             }
     
             $message_sent = json_decode($response, true);
-
-            error_log(serialize($message_sent));
     
-            if (in_array($message_sent['status'], [200, 201])) {
+            if (in_array($message_sent['code'], [200, 201]) || $message_sent['code'] == 'ok') {
                 return true;
             }
         } catch (\Throwable $th) {
-            error_log($th->getMessage());
+            logger($th->getMessage());
         }
 
         return false;
