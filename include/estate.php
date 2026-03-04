@@ -5,16 +5,25 @@ class Estate
 {
     function restatelogin($username, $password, $tblname)
     {
+        $db = $GLOBALS['rstate'];
+
         if ($tblname == 'admin') {
-            $q = "select * from " . $tblname . " where username='" . $username . "' and password='" . $password . "'";
-            return $GLOBALS['rstate']->query($q)->num_rows;
-        }
-        else if ($tblname == 'restate_details') {
-            $q = "select * from " . $tblname . " where email='" . $username . "' and password='" . $password . "'";
-            return $GLOBALS['rstate']->query($q)->num_rows;
+            // Fetch by username only — verify password hash separately
+            $q    = "SELECT * FROM `admin` WHERE `username` = '" . $db->real_escape_string($username) . "' LIMIT 1";
+            $row  = $db->query($q)->fetch_assoc();
+            return ($row && password_verify($password, $row['password'])) ? $row : false;
+
+        } elseif ($tblname == 'restate_details') {
+            // Fetch by email only — verify password hash separately
+            $q    = "SELECT * FROM `restate_details` WHERE `email` = '" . $db->real_escape_string($username) . "' LIMIT 1";
+            $row  = $db->query($q)->fetch_assoc();
+            return ($row && password_verify($password, $row['password'])) ? $row : false;
+
         } else {
-            $q = "select * from " . $tblname . " where email='" . $username . "' and password='" . $password . "' and status=1";
-            return $GLOBALS['rstate']->query($q)->num_rows;
+            // All other tables (e.g. tbl_user) — fetch by email and active status
+            $q    = "SELECT * FROM `{$tblname}` WHERE `email` = '" . $db->real_escape_string($username) . "' AND `status` = 1 LIMIT 1";
+            $row  = $db->query($q)->fetch_assoc();
+            return ($row && password_verify($password, $row['password'])) ? $row : false;
         }
     }
 

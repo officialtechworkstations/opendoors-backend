@@ -27,8 +27,9 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
     $email     = strip_tags(mysqli_real_escape_string($rstate, $data['email']));
     $mobile    = strip_tags(mysqli_real_escape_string($rstate, $data['mobile']));
     $ccode     = strip_tags(mysqli_real_escape_string($rstate, $data['ccode']));
-    $password  = strip_tags(mysqli_real_escape_string($rstate, $data['password']));
+    $password  = password_hash(strip_tags($data['password']), PASSWORD_BCRYPT);
     $refercode = strip_tags(mysqli_real_escape_string($rstate, $data['refercode']));
+    $accept_newsletter = strip_tags(mysqli_real_escape_string($rstate, $data['accept_newsletter'])) ? 1 : 0;
     
     
     $checkmob   = $rstate->query("select * from tbl_user where mobile=" . $mobile . "");
@@ -66,7 +67,8 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
                     "ccode",
                     "refercode",
                     "wallet",
-                    "parentcode"
+                    "parentcode",
+                    "accept_newsletter",
                 );
                 $data_values  = array(
                     "$name",
@@ -77,7 +79,8 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
                     "$ccode",
                     "$prentcode",
                     "$fin",
-                    "$refercode"
+                    "$refercode",
+                    "$accept_newsletter",
                 );
                 
                 $h     = new Estate();
@@ -128,7 +131,8 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
                 "reg_date",
                 "password",
                 "ccode",
-                "refercode"
+                "refercode",
+                "accept_newsletter",
             );
             $data_values  = array(
                 "$name",
@@ -137,7 +141,8 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
                 "$timestamp",
                 "$password",
                 "$ccode",
-                "$prentcode"
+                "$prentcode",
+                "$accept_newsletter",
             );
             $h            = new Estate();
             $check        = $h->restateinsertdata_Api_Id($field_values, $data_values, $table);

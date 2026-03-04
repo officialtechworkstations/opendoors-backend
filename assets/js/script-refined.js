@@ -640,6 +640,11 @@ $(document).on("submit", "form", function(_0x1a6077) {
     return false;
 });
 $(document).on("click", ".drop", function(_0x408d10) {
+    if (!confirm('Are you sure you want to complete this action?')) {
+        _0x408d10.preventDefault();
+        return;
+    }
+
     var _0x4ba44a = document.location.href;
     var _0x5896be = _0x4ba44a.substr(_0x4ba44a.lastIndexOf('/') + 1);
     var _0x21a8f6 = $(this).attr("data-id");

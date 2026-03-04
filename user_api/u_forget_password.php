@@ -13,7 +13,7 @@ if ($ccode == '' or $mobile == '' or $password == '') {
 
     $ccode   = strip_tags(mysqli_real_escape_string($rstate, $ccode));
     $mobile   = strip_tags(mysqli_real_escape_string($rstate, $mobile));
-    $password = strip_tags(mysqli_real_escape_string($rstate, $password));
+    $password = password_hash(strip_tags($password), PASSWORD_BCRYPT);
 
     $counter = $rstate->query("SELECT * FROM `tbl_user` WHERE `mobile` = '{$mobile}' AND `ccode` = '{$ccode}' ORDER BY `id` DESC LIMIT 1");
 

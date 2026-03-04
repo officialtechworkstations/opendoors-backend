@@ -449,9 +449,11 @@ if (isset($_POST["type"])) {
         $table = "admin";
         $field = [
             "username" => $dname,
-            "password" => $dsname,
             "mobile" => $mobile,
         ];
+        if ($dsname != "") {
+            $field["password"] = password_hash(strip_tags($dsname), PASSWORD_BCRYPT);
+        }
         $where = "where id=" . $id . "";
         $h = new Estate();
         $check = $h->restateupdateData($field, $table, $where);

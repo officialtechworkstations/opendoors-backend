@@ -1,0 +1,190 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: localhost
+-- Generation Time: Mar 04, 2026 at 02:22 PM
+-- Server version: 10.4.28-MariaDB
+-- PHP Version: 8.2.4
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+--
+-- Database: `opendoors`
+--
+
+--
+-- Indexes for table `payout_setting`
+--
+ALTER TABLE `payout_setting`
+  ADD KEY `owner_id` (`owner_id`),
+  ADD KEY `status` (`status`(20)),
+  ADD KEY `r_type` (`r_type`);
+
+--
+-- Indexes for table `plan_purchase_history`
+--
+ALTER TABLE `plan_purchase_history`
+  ADD KEY `uid` (`uid`),
+  ADD KEY `plan_id` (`plan_id`),
+  ADD KEY `expire_date` (`expire_date`),
+  ADD KEY `start_date` (`start_date`);
+
+--
+-- Indexes for table `tbl_book`
+--
+ALTER TABLE `tbl_book`
+  ADD KEY `prop_id` (`prop_id`),
+  ADD KEY `uid` (`uid`),
+  ADD KEY `book_date` (`book_date`),
+  ADD KEY `check_in` (`check_in`),
+  ADD KEY `check_out` (`check_out`),
+  ADD KEY `p_method_id` (`p_method_id`),
+  ADD KEY `book_status` (`book_status`),
+  ADD KEY `add_user_id` (`add_user_id`);
+
+--
+-- Indexes for table `tbl_category`
+--
+ALTER TABLE `tbl_category`
+  ADD KEY `status` (`status`);
+
+--
+-- Indexes for table `tbl_country`
+--
+ALTER TABLE `tbl_country`
+  ADD KEY `status` (`status`),
+  ADD KEY `d_con` (`d_con`);
+
+--
+-- Indexes for table `tbl_coupon`
+--
+ALTER TABLE `tbl_coupon`
+  ADD KEY `status` (`status`),
+  ADD KEY `cdate` (`cdate`);
+
+--
+-- Indexes for table `tbl_enquiry`
+--
+ALTER TABLE `tbl_enquiry`
+  ADD KEY `prop_id` (`prop_id`),
+  ADD KEY `uid` (`uid`),
+  ADD KEY `add_user_id` (`add_user_id`);
+
+--
+-- Indexes for table `tbl_extra`
+--
+ALTER TABLE `tbl_extra`
+  ADD KEY `pid` (`pid`),
+  ADD KEY `status` (`status`),
+  ADD KEY `add_user_id` (`add_user_id`);
+
+--
+-- Indexes for table `tbl_facility`
+--
+ALTER TABLE `tbl_facility`
+  ADD KEY `status` (`status`);
+
+--
+-- Indexes for table `tbl_faq`
+--
+ALTER TABLE `tbl_faq`
+  ADD KEY `status` (`status`);
+
+--
+-- Indexes for table `tbl_fav`
+--
+ALTER TABLE `tbl_fav`
+  ADD KEY `uid` (`uid`),
+  ADD KEY `property_id` (`property_id`),
+  ADD KEY `property_type` (`property_type`);
+
+--
+-- Indexes for table `tbl_gallery`
+--
+ALTER TABLE `tbl_gallery`
+  ADD KEY `pid` (`pid`),
+  ADD KEY `cat_id` (`cat_id`),
+  ADD KEY `status` (`status`),
+  ADD KEY `add_user_id` (`add_user_id`);
+
+--
+-- Indexes for table `tbl_gal_cat`
+--
+ALTER TABLE `tbl_gal_cat`
+  ADD KEY `pid` (`pid`),
+  ADD KEY `status` (`status`),
+  ADD KEY `add_user_id` (`add_user_id`);
+
+--
+-- Indexes for table `tbl_notification`
+--
+ALTER TABLE `tbl_notification`
+  ADD KEY `uid` (`uid`),
+  ADD KEY `datetime` (`datetime`);
+
+--
+-- Indexes for table `tbl_package`
+--
+ALTER TABLE `tbl_package`
+  ADD KEY `status` (`status`);
+
+--
+-- Indexes for table `tbl_page`
+--
+ALTER TABLE `tbl_page`
+  ADD KEY `status` (`status`);
+
+--
+-- Indexes for table `tbl_payment_list`
+--
+ALTER TABLE `tbl_payment_list`
+  ADD KEY `status` (`status`),
+  ADD KEY `p_show` (`p_show`),
+  ADD KEY `s_show` (`s_show`);
+
+--
+-- Indexes for table `tbl_person_record`
+--
+ALTER TABLE `tbl_person_record`
+  ADD KEY `book_id` (`book_id`);
+
+--
+-- Indexes for table `tbl_property`
+--
+ALTER TABLE `tbl_property`
+  ADD KEY `status` (`status`),
+  ADD KEY `ptype` (`ptype`),
+  ADD KEY `add_user_id` (`add_user_id`),
+  ADD KEY `pbuysell` (`pbuysell`),
+  ADD KEY `country_id` (`country_id`),
+  ADD KEY `listing_date` (`listing_date`),
+  ADD KEY `is_sell` (`is_sell`),
+  ADD KEY `is_featured` (`is_featured`);
+
+--
+-- Indexes for table `tbl_staff`
+--
+ALTER TABLE `tbl_staff`
+  ADD KEY `status` (`status`);
+
+--
+-- Indexes for table `tbl_user`
+--
+ALTER TABLE `tbl_user`
+  ADD KEY `status` (`status`),
+  ADD KEY `parentcode` (`parentcode`),
+  ADD KEY `reg_date` (`reg_date`),
+  ADD KEY `pack_id` (`pack_id`),
+  ADD KEY `is_subscribe` (`is_subscribe`);
+
+--
+-- Indexes for table `wallet_report`
+--
+ALTER TABLE `wallet_report`
+  ADD KEY `uid` (`uid`),
+  ADD KEY `tdate` (`tdate`);
+
+COMMIT;

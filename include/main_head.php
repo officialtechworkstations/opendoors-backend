@@ -35,7 +35,7 @@ include 'include/estate.php';
     <!-- Bootstrap css-->
     <link rel="stylesheet" type="text/css" href="assets/css/vendors/bootstrap.css">
     <!-- App css-->
-    <link rel="stylesheet" type="text/css" href="assets/css/style.css">
+    <link rel="stylesheet" type="text/css" href="assets/css/style.css?v=1.0.1">
   
     <!-- Responsive css-->
     <link rel="stylesheet" type="text/css" href="assets/css/responsive.css">

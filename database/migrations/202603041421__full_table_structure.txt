@@ -1,0 +1,904 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: localhost
+-- Generation Time: Mar 04, 2026 at 02:17 PM
+-- Server version: 10.4.28-MariaDB
+-- PHP Version: 8.2.4
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+--
+-- Database: `opendoors`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `admin`
+--
+
+CREATE TABLE `admin` (
+  `id` int(11) NOT NULL,
+  `username` longtext NOT NULL,
+  `password` longtext NOT NULL,
+  `mobile` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payout_setting`
+--
+
+CREATE TABLE `payout_setting` (
+  `id` int(11) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  `amt` int(11) NOT NULL,
+  `status` text NOT NULL,
+  `proof` text DEFAULT NULL,
+  `r_date` datetime NOT NULL,
+  `r_type` enum('UPI','BANK Transfer','Paypal') NOT NULL,
+  `acc_number` text DEFAULT NULL,
+  `bank_name` text DEFAULT NULL,
+  `acc_name` text DEFAULT NULL,
+  `ifsc_code` text DEFAULT NULL,
+  `upi_id` text DEFAULT NULL,
+  `paypal_id` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `plan_purchase_history`
+--
+
+CREATE TABLE `plan_purchase_history` (
+  `id` int(11) NOT NULL,
+  `uid` int(11) NOT NULL,
+  `plan_id` int(11) NOT NULL,
+  `p_name` text NOT NULL,
+  `t_date` datetime NOT NULL,
+  `amount` int(11) NOT NULL,
+  `day` int(11) NOT NULL,
+  `plan_title` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `plan_description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `expire_date` date NOT NULL,
+  `start_date` date NOT NULL,
+  `trans_id` text NOT NULL,
+  `plan_image` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_book`
+--
+
+CREATE TABLE `tbl_book` (
+  `id` int(11) NOT NULL,
+  `prop_id` int(11) NOT NULL,
+  `uid` int(11) NOT NULL,
+  `book_date` date NOT NULL,
+  `check_in` date NOT NULL,
+  `check_out` date NOT NULL,
+  `subtotal` float NOT NULL,
+  `total` float NOT NULL,
+  `tax` float NOT NULL,
+  `cou_amt` float NOT NULL DEFAULT 0,
+  `wall_amt` float NOT NULL DEFAULT 0,
+  `transaction_id` text DEFAULT NULL,
+  `p_method_id` int(11) NOT NULL,
+  `add_note` text DEFAULT NULL,
+  `book_status` enum('Booked','Check_in','Completed','Cancelled','Confirmed') NOT NULL DEFAULT 'Booked',
+  `book_for` enum('self','other') NOT NULL,
+  `is_rate` int(11) NOT NULL DEFAULT 0,
+  `total_rate` float DEFAULT 0,
+  `rate_text` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `prop_price` int(11) NOT NULL,
+  `cancle_reason` text DEFAULT NULL,
+  `total_day` int(11) NOT NULL,
+  `prop_img` text NOT NULL,
+  `prop_title` text NOT NULL,
+  `add_user_id` int(11) NOT NULL,
+  `check_intime` datetime DEFAULT NULL,
+  `check_outtime` datetime DEFAULT NULL,
+  `noguest` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_booking_commission`
+--
+
+CREATE TABLE `tbl_booking_commission` (
+  `id` int(11) NOT NULL,
+  `user_type` enum('user','host','none','') NOT NULL DEFAULT 'none',
+  `amount` float(11,2) NOT NULL DEFAULT 0.00,
+  `amount_type` enum('flat','percentage','none','') NOT NULL DEFAULT 'none',
+  `max_amount` float(11,2) NOT NULL DEFAULT 0.00,
+  `range_from` float(11,2) NOT NULL DEFAULT 0.00,
+  `range_to` float(11,2) NOT NULL DEFAULT 0.00,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_category`
+--
+
+CREATE TABLE `tbl_category` (
+  `id` int(11) NOT NULL,
+  `title` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `img` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `status` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_country`
+--
+
+CREATE TABLE `tbl_country` (
+  `id` int(11) NOT NULL,
+  `title` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `img` text NOT NULL,
+  `status` int(11) NOT NULL,
+  `d_con` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_coupon`
+--
+
+CREATE TABLE `tbl_coupon` (
+  `id` int(11) NOT NULL,
+  `c_img` text NOT NULL,
+  `cdate` date NOT NULL,
+  `c_desc` text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `c_value` text NOT NULL,
+  `c_title` text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `status` int(11) NOT NULL DEFAULT 1,
+  `ctitle` text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `min_amt` int(11) NOT NULL,
+  `subtitle` text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_enquiry`
+--
+
+CREATE TABLE `tbl_enquiry` (
+  `id` int(11) NOT NULL,
+  `prop_id` int(11) NOT NULL,
+  `uid` int(11) NOT NULL,
+  `add_user_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_extra`
+--
+
+CREATE TABLE `tbl_extra` (
+  `id` int(11) NOT NULL,
+  `pid` int(11) NOT NULL,
+  `img` text NOT NULL,
+  `status` int(11) NOT NULL,
+  `add_user_id` int(11) NOT NULL DEFAULT 0,
+  `pano` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_facility`
+--
+
+CREATE TABLE `tbl_facility` (
+  `id` int(11) NOT NULL,
+  `title` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `img` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `status` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_faq`
+--
+
+CREATE TABLE `tbl_faq` (
+  `id` int(11) NOT NULL,
+  `question` text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `answer` text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `status` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_fav`
+--
+
+CREATE TABLE `tbl_fav` (
+  `id` int(11) NOT NULL,
+  `uid` int(11) NOT NULL,
+  `property_id` int(11) NOT NULL,
+  `property_type` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_gallery`
+--
+
+CREATE TABLE `tbl_gallery` (
+  `id` int(11) NOT NULL,
+  `pid` int(11) NOT NULL,
+  `cat_id` int(11) NOT NULL,
+  `img` text NOT NULL,
+  `status` int(11) NOT NULL,
+  `add_user_id` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_gal_cat`
+--
+
+CREATE TABLE `tbl_gal_cat` (
+  `id` int(11) NOT NULL,
+  `pid` int(11) NOT NULL,
+  `title` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `status` int(11) NOT NULL,
+  `add_user_id` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_notification`
+--
+
+CREATE TABLE `tbl_notification` (
+  `id` int(11) NOT NULL,
+  `uid` int(11) NOT NULL,
+  `datetime` datetime NOT NULL,
+  `title` text NOT NULL,
+  `description` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_package`
+--
+
+CREATE TABLE `tbl_package` (
+  `id` int(11) NOT NULL,
+  `title` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `image` text NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `status` int(11) NOT NULL,
+  `day` int(11) NOT NULL,
+  `price` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_page`
+--
+
+CREATE TABLE `tbl_page` (
+  `id` int(11) NOT NULL,
+  `title` text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `status` int(11) NOT NULL,
+  `description` text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_payment_list`
+--
+
+CREATE TABLE `tbl_payment_list` (
+  `id` int(11) NOT NULL,
+  `title` text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `img` text NOT NULL,
+  `attributes` text NOT NULL,
+  `status` int(11) NOT NULL DEFAULT 1,
+  `subtitle` text DEFAULT NULL,
+  `p_show` int(11) NOT NULL,
+  `s_show` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_person_record`
+--
+
+CREATE TABLE `tbl_person_record` (
+  `id` int(11) NOT NULL,
+  `book_id` int(11) NOT NULL,
+  `fname` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `lname` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `gender` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `email` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `mobile` text NOT NULL,
+  `ccode` text NOT NULL,
+  `country` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_prop`
+--
+
+CREATE TABLE `tbl_prop` (
+  `id` int(11) NOT NULL,
+  `data` longtext NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_property`
+--
+
+CREATE TABLE `tbl_property` (
+  `id` int(11) NOT NULL,
+  `title` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `image` text NOT NULL,
+  `price` float NOT NULL,
+  `status` int(11) NOT NULL,
+  `address` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `facility` text NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `beds` int(11) NOT NULL,
+  `bathroom` int(11) NOT NULL,
+  `sqrft` int(11) NOT NULL,
+  `rate` float NOT NULL,
+  `ptype` int(11) NOT NULL,
+  `latitude` text NOT NULL,
+  `longtitude` text NOT NULL,
+  `mobile` text NOT NULL,
+  `city` text NOT NULL,
+  `listing_date` datetime NOT NULL,
+  `add_user_id` int(11) NOT NULL,
+  `pbuysell` int(11) NOT NULL,
+  `country_id` int(11) NOT NULL,
+  `plimit` int(11) NOT NULL,
+  `is_sell` int(11) NOT NULL DEFAULT 0,
+  `party_allowed` tinyint(1) UNSIGNED NOT NULL DEFAULT 0,
+  `party_cost` float(11,2) UNSIGNED NOT NULL DEFAULT 0.00,
+  `is_featured` tinyint(1) UNSIGNED NOT NULL DEFAULT 0,
+  `caution_fee` float(11,2) UNSIGNED NOT NULL DEFAULT 0.00
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_required_documents`
+--
+
+CREATE TABLE `tbl_required_documents` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `name` varchar(191) DEFAULT NULL,
+  `description` longtext DEFAULT NULL,
+  `user_type` enum('user','host') NOT NULL DEFAULT 'user',
+  `upload_type` enum('single','multiple') NOT NULL DEFAULT 'single',
+  `accpetable_file_types` varchar(255) DEFAULT NULL,
+  `status` enum('active','inactive') NOT NULL DEFAULT 'active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `deleted_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_setting`
+--
+
+CREATE TABLE `tbl_setting` (
+  `id` int(11) NOT NULL,
+  `webname` text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `weblogo` text NOT NULL,
+  `timezone` text NOT NULL,
+  `currency` text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `pdboy` int(11) NOT NULL,
+  `one_key` text NOT NULL,
+  `one_hash` text NOT NULL,
+  `scredit` int(11) NOT NULL,
+  `rcredit` int(11) NOT NULL,
+  `show_dark` int(11) NOT NULL DEFAULT 0,
+  `tax` float NOT NULL,
+  `wlimit` int(11) NOT NULL,
+  `sms_type` text NOT NULL,
+  `auth_key` text NOT NULL,
+  `otp_id` text NOT NULL,
+  `acc_id` text NOT NULL,
+  `auth_token` text NOT NULL,
+  `twilio_number` text NOT NULL,
+  `termii_base_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `termii_sender_id` varchar(255) DEFAULT NULL,
+  `termii_api_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `otp_auth` text NOT NULL,
+  `show_property` text NOT NULL,
+  `notice_message` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `package_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `playstore_url` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `playstore_version` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `playstore_buildnumber` int(11) DEFAULT NULL,
+  `appstore_url` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `appstore_version` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `appstore_buildnumber` int(11) DEFAULT NULL,
+  `app_force_update` tinyint(1) UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_staff`
+--
+
+CREATE TABLE `tbl_staff` (
+  `id` int(11) NOT NULL,
+  `country` text NOT NULL,
+  `category` text NOT NULL,
+  `coupon` text NOT NULL,
+  `enquiry` text NOT NULL,
+  `payout` text NOT NULL,
+  `property` text NOT NULL,
+  `eimg` text NOT NULL,
+  `facility` text NOT NULL,
+  `gcat` text NOT NULL,
+  `gal` text NOT NULL,
+  `package` text NOT NULL,
+  `booking` text NOT NULL,
+  `page` text NOT NULL,
+  `faq` text NOT NULL,
+  `ulist` text NOT NULL,
+  `payment` text NOT NULL,
+  `email` text NOT NULL,
+  `password` text NOT NULL,
+  `status` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_user`
+--
+
+CREATE TABLE `tbl_user` (
+  `id` int(11) NOT NULL,
+  `name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `email` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `ccode` text NOT NULL,
+  `mobile` text NOT NULL,
+  `password` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `refercode` int(11) NOT NULL,
+  `parentcode` int(11) DEFAULT NULL,
+  `wallet` float NOT NULL DEFAULT 0,
+  `reg_date` datetime NOT NULL,
+  `status` int(11) NOT NULL DEFAULT 1,
+  `verification_status` enum('pending','approved','rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `pro_pic` varchar(500) DEFAULT 'assets/images/dashboard/profile.png',
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `pack_id` int(11) NOT NULL DEFAULT 0,
+  `is_subscribe` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_user_documents`
+--
+
+CREATE TABLE `tbl_user_documents` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `document_id` int(11) UNSIGNED DEFAULT NULL,
+  `user_id` int(11) UNSIGNED DEFAULT NULL,
+  `file_path` varchar(255) DEFAULT NULL,
+  `file_type` varchar(100) DEFAULT NULL,
+  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  `reason` longtext DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `deleted_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `wallet_report`
+--
+
+CREATE TABLE `wallet_report` (
+  `id` int(11) NOT NULL,
+  `uid` int(11) NOT NULL,
+  `message` text NOT NULL,
+  `status` text NOT NULL,
+  `amt` int(11) NOT NULL,
+  `tdate` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `admin`
+--
+ALTER TABLE `admin`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `payout_setting`
+--
+ALTER TABLE `payout_setting`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `plan_purchase_history`
+--
+ALTER TABLE `plan_purchase_history`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_book`
+--
+ALTER TABLE `tbl_book`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_booking_commission`
+--
+ALTER TABLE `tbl_booking_commission`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `type` (`user_type`),
+  ADD KEY `amount_type` (`amount_type`),
+  ADD KEY `is_active` (`is_active`);
+
+--
+-- Indexes for table `tbl_category`
+--
+ALTER TABLE `tbl_category`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_country`
+--
+ALTER TABLE `tbl_country`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_coupon`
+--
+ALTER TABLE `tbl_coupon`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_enquiry`
+--
+ALTER TABLE `tbl_enquiry`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_extra`
+--
+ALTER TABLE `tbl_extra`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_facility`
+--
+ALTER TABLE `tbl_facility`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_faq`
+--
+ALTER TABLE `tbl_faq`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_fav`
+--
+ALTER TABLE `tbl_fav`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_gallery`
+--
+ALTER TABLE `tbl_gallery`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_gal_cat`
+--
+ALTER TABLE `tbl_gal_cat`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_notification`
+--
+ALTER TABLE `tbl_notification`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_package`
+--
+ALTER TABLE `tbl_package`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_page`
+--
+ALTER TABLE `tbl_page`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_payment_list`
+--
+ALTER TABLE `tbl_payment_list`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_person_record`
+--
+ALTER TABLE `tbl_person_record`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_prop`
+--
+ALTER TABLE `tbl_prop`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_property`
+--
+ALTER TABLE `tbl_property`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_required_documents`
+--
+ALTER TABLE `tbl_required_documents`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `name` (`name`),
+  ADD KEY `user_type` (`user_type`),
+  ADD KEY `upload_type` (`upload_type`),
+  ADD KEY `status` (`status`),
+  ADD KEY `deleted_at` (`deleted_at`);
+
+--
+-- Indexes for table `tbl_setting`
+--
+ALTER TABLE `tbl_setting`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_staff`
+--
+ALTER TABLE `tbl_staff`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tbl_user`
+--
+ALTER TABLE `tbl_user`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `verification_status` (`verification_status`);
+
+--
+-- Indexes for table `tbl_user_documents`
+--
+ALTER TABLE `tbl_user_documents`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `document_id` (`document_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `status` (`status`),
+  ADD KEY `deleted_at` (`deleted_at`);
+
+--
+-- Indexes for table `wallet_report`
+--
+ALTER TABLE `wallet_report`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `admin`
+--
+ALTER TABLE `admin`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payout_setting`
+--
+ALTER TABLE `payout_setting`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `plan_purchase_history`
+--
+ALTER TABLE `plan_purchase_history`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_book`
+--
+ALTER TABLE `tbl_book`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_booking_commission`
+--
+ALTER TABLE `tbl_booking_commission`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_category`
+--
+ALTER TABLE `tbl_category`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_country`
+--
+ALTER TABLE `tbl_country`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_coupon`
+--
+ALTER TABLE `tbl_coupon`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_enquiry`
+--
+ALTER TABLE `tbl_enquiry`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_extra`
+--
+ALTER TABLE `tbl_extra`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_facility`
+--
+ALTER TABLE `tbl_facility`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_faq`
+--
+ALTER TABLE `tbl_faq`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_fav`
+--
+ALTER TABLE `tbl_fav`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_gallery`
+--
+ALTER TABLE `tbl_gallery`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_gal_cat`
+--
+ALTER TABLE `tbl_gal_cat`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_notification`
+--
+ALTER TABLE `tbl_notification`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_package`
+--
+ALTER TABLE `tbl_package`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_page`
+--
+ALTER TABLE `tbl_page`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_payment_list`
+--
+ALTER TABLE `tbl_payment_list`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_person_record`
+--
+ALTER TABLE `tbl_person_record`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_prop`
+--
+ALTER TABLE `tbl_prop`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_property`
+--
+ALTER TABLE `tbl_property`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_required_documents`
+--
+ALTER TABLE `tbl_required_documents`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_setting`
+--
+ALTER TABLE `tbl_setting`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_staff`
+--
+ALTER TABLE `tbl_staff`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_user`
+--
+ALTER TABLE `tbl_user`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tbl_user_documents`
+--
+ALTER TABLE `tbl_user_documents`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `wallet_report`
+--
+ALTER TABLE `wallet_report`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+COMMIT;

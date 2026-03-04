@@ -14,13 +14,14 @@ if ($data['mobile'] == '' or $data['password'] == '' or $data['ccode'] == '') {
 } else {
     $mobile   = strip_tags(mysqli_real_escape_string($rstate, $data['mobile']));
     $ccode    = strip_tags(mysqli_real_escape_string($rstate, $data['ccode']));
-    $password = strip_tags(mysqli_real_escape_string($rstate, $data['password']));
+    $password = strip_tags($data['password']);
 
-    $chek       = $rstate->query("select * from tbl_user where  (mobile='" . $mobile . "' or email='" . $mobile . "') and ccode='" . $ccode . "' and status = 1 and password='" . $password . "'");
-    $chek_admin = $rstate->query("select * from admin where  mobile='" . $ccode . $mobile . "' and password='" . $password . "'");
+    // Fetch user by identity only — password verified separately against the hash
+    $chek_user  = $rstate->query("SELECT * FROM tbl_user WHERE (mobile='" . $mobile . "' OR email='" . $mobile . "') AND ccode='" . $ccode . "' AND status = 1");
+    $chek_admin = $rstate->query("SELECT * FROM admin WHERE mobile='" . $ccode . $mobile . "'");
 
-    if ($chek->num_rows != 0) {
-        $c = $rstate->query("select * from tbl_user where  (mobile='" . $mobile . "' or email='" . $mobile . "')  and ccode='" . $ccode . "' and status = 1 and password='" . $password . "'")->fetch_assoc();
+    if ($chek_user->num_rows != 0 && password_verify($password, $chek_user->fetch_assoc()['password'])) {
+        $c = $rstate->query("SELECT * FROM tbl_user WHERE (mobile='" . $mobile . "' OR email='" . $mobile . "') AND ccode='" . $ccode . "' AND status = 1")->fetch_assoc();
 
         $returnArr = [
             "UserLogin"    => $c,
@@ -30,8 +31,8 @@ if ($data['mobile'] == '' or $data['password'] == '' or $data['ccode'] == '') {
             "type"         => "user",
             "ResponseMsg"  => "Login successfully!",
         ];
-    } else if ($chek_admin->num_rows != 0) {
-        $c           = $rstate->query("select * from admin where  mobile='" . $ccode . $mobile . "' and password='" . $password . "'")->fetch_assoc();
+    } else if ($chek_admin->num_rows != 0 && password_verify($password, $chek_admin->fetch_assoc()['password'])) {
+        $c           = $rstate->query("SELECT * FROM admin WHERE mobile='" . $ccode . $mobile . "'")->fetch_assoc();
         $p           = [];
         $p["id"]     = "0";
         $p["name"]   = $c['username'];
@@ -48,7 +49,7 @@ if ($data['mobile'] == '' or $data['password'] == '' or $data['ccode'] == '') {
         $returnArr = [
             "ResponseCode" => "401",
             "Result"       => "false",
-            "ResponseMsg"  => "Invalid Mobile Number Or Email Addresss or Password!!!",
+            "ResponseMsg"  => "Invalid Mobile Number Or Email Address or Password!",
         ];
     }
 }

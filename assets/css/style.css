@@ -36403,3 +36403,7 @@ table.dataTable tbody tr {
 .jsgrid .jsgrid-pager [class*=jsgrid-pager] {
   border-color: rgba(83, 70, 134, 0.1019607843);
 }
+
+.cursor-pointer {
+  cursor: pointer;
+}
