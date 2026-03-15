@@ -504,7 +504,7 @@ CREATE TABLE `tbl_user` (
   `reg_date` datetime NOT NULL,
   `status` int(11) NOT NULL DEFAULT 1,
   `verification_status` enum('pending','approved','rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
-  `pro_pic` varchar(500) DEFAULT 'assets/images/dashboard/profile.png',
+  `pro_pic` varchar(500) DEFAULT '',
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
   `pack_id` int(11) NOT NULL DEFAULT 0,
