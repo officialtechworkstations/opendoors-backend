@@ -23,13 +23,13 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
     );
 } else {
     
-    $name     = strip_tags(mysqli_real_escape_string($rstate, $data['name']));
-    $email     = strip_tags(mysqli_real_escape_string($rstate, $data['email']));
-    $mobile    = strip_tags(mysqli_real_escape_string($rstate, $data['mobile']));
-    $ccode     = strip_tags(mysqli_real_escape_string($rstate, $data['ccode']));
-    $password  = password_hash(strip_tags($data['password']), PASSWORD_BCRYPT);
-    $refercode = strip_tags(mysqli_real_escape_string($rstate, $data['refercode']));
-    $accept_newsletter = strip_tags(mysqli_real_escape_string($rstate, $data['accept_newsletter'])) ? 1 : 0;
+    $name     = trim(strip_tags(mysqli_real_escape_string($rstate, $data['name'])));
+    $email     = trim(strip_tags(mysqli_real_escape_string($rstate, $data['email'])));
+    $mobile    = trim(strip_tags(mysqli_real_escape_string($rstate, $data['mobile'])));
+    $ccode     = trim(strip_tags(mysqli_real_escape_string($rstate, $data['ccode'])));
+    $password  = password_hash(trim(strip_tags($data['password'])), PASSWORD_BCRYPT);
+    $refercode = trim(strip_tags(mysqli_real_escape_string($rstate, $data['refercode'])));
+    $accept_newsletter = trim(strip_tags(mysqli_real_escape_string($rstate, $data['accept_newsletter']))) ? 1 : 0;
     
     
     $checkmob   = $rstate->query("select * from tbl_user where mobile=" . $mobile . "");
@@ -107,6 +107,11 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
                 
                 $c = $rstate->query("select * from tbl_user where id=" . $check . "")->fetch_assoc();
                 
+                // Update OneSignal tags if newsletter accepted
+                if ($accept_newsletter == 1) {
+                    oneSignalNewsLetterSubscription($check, true, ['email' => trim($email)]);
+                }
+                
                 $returnArr = array(
                     "UserLogin" => $c,
                     "ResponseCode" => "200",
@@ -147,6 +152,12 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
             $h            = new Estate();
             $check        = $h->restateinsertdata_Api_Id($field_values, $data_values, $table);
             $c            = $rstate->query("select * from tbl_user where id=" . $check . "")->fetch_assoc();
+            
+            // Update OneSignal tags if newsletter accepted
+            if ($accept_newsletter == 1) {
+                oneSignalNewsLetterSubscription($check, true, ['email' => trim($email)]);
+            }
+            
             $returnArr    = array(
                 "UserLogin" => $c,
                 "ResponseCode" => "200",
