@@ -25,7 +25,7 @@ class Termii {
                 "from" => $termii['termii_sender_id'],
                 "sms" => $message_body,
                 "type" => "plain", 
-                "channel" => "generic"
+                "channel" => "dnd"
             ];
     
             $post_data = json_encode($data);
