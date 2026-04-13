@@ -22,21 +22,34 @@ if ($mobile == '') {
     $to = $mobile; // twilio trial verified number
     $otp = rand(111111, 999999);
 
-    try {
-        $msg_sent = $termii->sendSms($to, "Your OTP is #" . $otp . " to verify and proceed.");
+    $settings = $rstate->query("SELECT * FROM `tbl_setting` ORDER BY `id` DESC LIMIT 1 ");
 
-        if ($msg_sent) {
-            $returnArr = array(
-                "ResponseCode" => "200",
-                "Result" => "true",
-                "ResponseMsg" => "OTP sent successfully",
-                "otp" => $otp
-            );
+    try {
+        if ($settings->num_rows > 0) {
+            $setting = $settings->fetch_assoc();
+            $companyName = $setting['webname'];
+
+            $msg_sent = $termii->sendSms($to, "Your {$companyName} verification pin is {$otp}. Valid for 10 minutes, one-time use only.");
+
+            if ($msg_sent) {
+                $returnArr = array(
+                    "ResponseCode" => "200",
+                    "Result" => "true",
+                    "ResponseMsg" => "OTP sent successfully",
+                    "otp" => $otp
+                );
+            } else {
+                $returnArr = array(
+                    "ResponseCode" => "401",
+                    "Result" => "false",
+                    "ResponseMsg" => "We could not send the OTP at this time. Please try again or contact Tech support for help",
+                );
+            }
         } else {
             $returnArr = array(
                 "ResponseCode" => "401",
                 "Result" => "false",
-                "ResponseMsg" => "We could not send the OTP at this time. Please try again or contact Tech support for help",
+                "ResponseMsg" => "Unable to retrieve company information for OTP message"
             );
         }
     } catch(Exception $e) {
