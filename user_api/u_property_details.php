@@ -72,7 +72,13 @@ if ($pro_id == '' or $uid == '') {
     $fp['sqrft'] = $sel['sqrft'];
     $fp['description'] = $sel['description'];
     $fp['latitude'] = $sel['latitude'];
-    $fp['mobile'] = $sel['mobile'];
+    // Host phone visibility: the owner always sees their own number; other
+    // users see it per the admin-configured mode (full / partial / hidden).
+    if ($sel['add_user_id'] == $uid) {
+        $fp['mobile'] = $sel['mobile'];
+    } else {
+        $fp['mobile'] = maskHostMobile($sel['mobile'], $set['host_mobile_display'] ?? 'full');
+    }
     $fp['plimit'] = $sel['plimit'];
     $fp['longtitude'] = $sel['longtitude'];
     $fp['party_allowed'] = $sel['party_allowed'];

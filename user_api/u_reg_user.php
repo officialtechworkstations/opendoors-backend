@@ -30,6 +30,8 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
     $password  = password_hash(trim(strip_tags($data['password'])), PASSWORD_BCRYPT);
     $refercode = trim(strip_tags(mysqli_real_escape_string($rstate, $data['refercode'])));
     $accept_newsletter = trim(strip_tags(mysqli_real_escape_string($rstate, $data['accept_newsletter']))) ? 1 : 0;
+    $accept_privacy_policy  = ! empty($data['accept_privacy_policy']) ? 1 : 0;
+    $accept_terms_condition = ! empty($data['accept_terms_condition']) ? 1 : 0;
     
     
     $checkmob   = $rstate->query("select * from tbl_user where mobile=" . $mobile . "");
@@ -69,6 +71,8 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
                     "wallet",
                     "parentcode",
                     "accept_newsletter",
+                    "accept_privacy_policy",
+                    "accept_terms_condition",
                 );
                 $data_values  = array(
                     "$name",
@@ -81,6 +85,8 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
                     "$fin",
                     "$refercode",
                     "$accept_newsletter",
+                    "$accept_privacy_policy",
+                    "$accept_terms_condition",
                 );
                 
                 $h     = new Estate();
@@ -138,6 +144,8 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
                 "ccode",
                 "refercode",
                 "accept_newsletter",
+                "accept_privacy_policy",
+                "accept_terms_condition",
             );
             $data_values  = array(
                 "$name",
@@ -148,6 +156,8 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
                 "$ccode",
                 "$prentcode",
                 "$accept_newsletter",
+                "$accept_privacy_policy",
+                "$accept_terms_condition",
             );
             $h            = new Estate();
             $check        = $h->restateinsertdata_Api_Id($field_values, $data_values, $table);

@@ -1,0 +1,6 @@
+ALTER TABLE `tbl_user`
+  ADD `social_provider` ENUM('google','apple','') NOT NULL DEFAULT '' AFTER `mobile`,
+  ADD `social_id` VARCHAR(191) DEFAULT NULL AFTER `social_provider`,
+  ADD `accept_privacy_policy` TINYINT(1) NOT NULL DEFAULT 0,
+  ADD `accept_terms_condition` TINYINT(1) NOT NULL DEFAULT 0,
+  ADD INDEX `social_idx` (`social_provider`, `social_id`);

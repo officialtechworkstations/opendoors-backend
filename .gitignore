@@ -14,3 +14,4 @@ build/
 *.swp
 *.pid
 error_log
+.kortex/

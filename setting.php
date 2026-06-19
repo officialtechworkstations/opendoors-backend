@@ -150,6 +150,25 @@ if($_SESSION['stype'] == 'Staff') { ?>
 												<option value="No" <?php if($set['show_property'] == 'No'){echo 'selected';}?>>No</option>
 											</select>
 										</div>
+										<div class="form-group mb-3 col-4">
+											<label><span class="text-danger">*</span> Show Host Phone Number To Users ? </label>
+											<select class="form-control" name="host_mobile_display">
+												<option value="full" <?php if(($set['host_mobile_display'] ?? 'full') == 'full'){echo 'selected';}?>>Show full number</option>
+												<option value="partial" <?php if(($set['host_mobile_display'] ?? '') == 'partial'){echo 'selected';}?>>Partially masked</option>
+												<option value="hidden" <?php if(($set['host_mobile_display'] ?? '') == 'hidden'){echo 'selected';}?>>Fully hidden</option>
+											</select>
+										</div>
+										<div class="form-group mb-3 col-12">
+											<h5 class="h5_set"><i class="fa fa-key"></i> Social Login (Google / Apple)</h5>
+										</div>
+										<div class="form-group mb-3 col-6">
+											<label>Google Client ID(s)</label>
+											<input type="text" class="form-control" placeholder="Comma-separate iOS, Android & Web client IDs" value="<?php echo $set['google_client_id'] ?? '';?>" name="google_client_id">
+										</div>
+										<div class="form-group mb-3 col-6">
+											<label>Apple Bundle ID(s)</label>
+											<input type="text" class="form-control" placeholder="Comma-separate allowed bundle / service IDs" value="<?php echo $set['apple_bundle_id'] ?? '';?>" name="apple_bundle_id">
+										</div>
 										<div class="form-group mb-3 col-12">
 											<h5 class="h5_set"><i class="fa fa-signal"></i> Onesignal Information</h5>
 										</div>

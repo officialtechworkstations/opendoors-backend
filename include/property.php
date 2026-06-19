@@ -496,6 +496,9 @@ if (isset($_POST["type"])) {
         $appstore_version = $_POST["appstore_version"];
         $appstore_buildnumber = $_POST["appstore_buildnumber"];
         $app_force_update = $_POST["app_force_update"] ? "1" : "0";
+        $host_mobile_display = $_POST["host_mobile_display"];
+        $google_client_id = $_POST["google_client_id"];
+        $apple_bundle_id = $_POST["apple_bundle_id"];
 
         $target_dir = dirname(dirname(__FILE__)) . "/images/website/";
         $url = "images/website/";
@@ -536,6 +539,9 @@ if (isset($_POST["type"])) {
                 "appstore_version" => $appstore_version,
                 "appstore_buildnumber" => $appstore_buildnumber,
                 "app_force_update" => $app_force_update,
+                "host_mobile_display" => $host_mobile_display,
+                "google_client_id" => $google_client_id,
+                "apple_bundle_id" => $apple_bundle_id,
             ];
 
             $where = "where id=" . $id . "";
@@ -580,6 +586,9 @@ if (isset($_POST["type"])) {
                 "appstore_version" => $appstore_version,
                 "appstore_buildnumber" => $appstore_buildnumber,
                 "app_force_update" => $app_force_update,
+                "host_mobile_display" => $host_mobile_display,
+                "google_client_id" => $google_client_id,
+                "apple_bundle_id" => $apple_bundle_id,
             ];
             $where = "where id=" . $id . "";
             $check = $h->restateupdateData($field, $table, $where);
