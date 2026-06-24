@@ -68,4 +68,3 @@ $new_url = "{$parsed_url['scheme']}://{$parsed_url['host']}{$parsed_url['path']}
 
 header("Location: " . $new_url);
 exit();
-?>
