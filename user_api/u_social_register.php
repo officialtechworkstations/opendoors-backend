@@ -44,7 +44,8 @@ if ($provider === '' || $token === '' || $mobile === '' || $ccode === '') {
 
 $identity = verifySocialToken($provider, $token);
 
-if ($identity === false || empty($identity['email'])) {
+// A false result means the token itself is invalid (bad signature/iss/aud/exp).
+if ($identity === false) {
     echo json_encode([
         "ResponseCode" => "401",
         "Result"       => "false",
@@ -54,24 +55,21 @@ if ($identity === false || empty($identity['email'])) {
 }
 
 $social_id = $rstate->real_escape_string($identity['social_id']);
-$email     = $rstate->real_escape_string($identity['email']);
 
-// Name comes from the token (Google) or the client fallback (Apple omits it).
-$name = $identity['name'] ?: ($data['name'] ?? '');
-$name = trim(strip_tags(mysqli_real_escape_string($rstate, $name)));
-if ($name === '') {
-    $name = strtok($identity['email'], '@');
+// Email: prefer the verified token, else the client fallback. Apple only sends
+// the email on the FIRST authorization (and to the app, not every token), so the
+// app should forward the email it captured then. Login below does not need it.
+$email_plain = $identity['email'] ?: (isset($data['email']) ? strtolower(trim($data['email'])) : '');
+$email       = $rstate->real_escape_string($email_plain);
+
+// Already registered? Match on the social identity first (works even when the
+// token carries no email), then on email if we have one. Auto-link & log in.
+$lookup = "SELECT * FROM tbl_user WHERE (social_provider='" . $provider . "' AND social_id='" . $social_id . "')";
+if ($email !== '') {
+    $lookup .= " OR email='" . $email . "'";
 }
-
-$accept_newsletter      = ! empty($data['accept_newsletter']) ? 1 : 0;
-$accept_privacy_policy  = ! empty($data['accept_privacy_policy']) ? 1 : 0;
-$accept_terms_condition = ! empty($data['accept_terms_condition']) ? 1 : 0;
-$refercode              = isset($data['refercode']) ? trim(strip_tags(mysqli_real_escape_string($rstate, $data['refercode']))) : '';
-
-// Already registered with this social identity or email -> auto-link & log in.
-$existing = $rstate->query(
-    "SELECT * FROM tbl_user WHERE (social_provider='" . $provider . "' AND social_id='" . $social_id . "') OR email='" . $email . "' LIMIT 1"
-)->fetch_assoc();
+$lookup .= " LIMIT 1";
+$existing = $rstate->query($lookup)->fetch_assoc();
 
 if ($existing) {
     if ($existing['social_id'] === null || $existing['social_id'] === '') {
@@ -90,6 +88,29 @@ if ($existing) {
     ]);
     exit;
 }
+
+// New account: we need an email. Apple omits it on repeat auth and the client
+// didn't forward one -> ask the app to send the email captured at first sign-in.
+if ($email_plain === '') {
+    echo json_encode([
+        "ResponseCode" => "422",
+        "Result"       => "false",
+        "ResponseMsg"  => "Email is required to complete sign-up. Please pass the email from the first Apple sign-in.",
+    ]);
+    exit;
+}
+
+// Name comes from the token (Google) or the client fallback (Apple omits it).
+$name = $identity['name'] ?: ($data['name'] ?? '');
+$name = trim(strip_tags(mysqli_real_escape_string($rstate, $name)));
+if ($name === '') {
+    $name = strtok($email_plain, '@');
+}
+
+$accept_newsletter      = ! empty($data['accept_newsletter']) ? 1 : 0;
+$accept_privacy_policy  = ! empty($data['accept_privacy_policy']) ? 1 : 0;
+$accept_terms_condition = ! empty($data['accept_terms_condition']) ? 1 : 0;
+$refercode              = isset($data['refercode']) ? trim(strip_tags(mysqli_real_escape_string($rstate, $data['refercode']))) : '';
 
 // Phone must still be unused.
 if ($rstate->query("SELECT id FROM tbl_user WHERE mobile='" . $mobile . "' AND ccode='" . $ccode . "'")->num_rows != 0) {
@@ -145,7 +166,7 @@ if ($valid_refer) {
 $c = $rstate->query("select * from tbl_user where id=" . (int) $uid . "")->fetch_assoc();
 
 if ($accept_newsletter == 1) {
-    oneSignalNewsLetterSubscription($uid, true, ['email' => trim($identity['email'])]);
+    oneSignalNewsLetterSubscription($uid, true, ['email' => $email_plain]);
 }
 
 echo json_encode([
