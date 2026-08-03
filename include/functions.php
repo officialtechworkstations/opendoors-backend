@@ -8,7 +8,7 @@ require __DIR__ . '/../vendor/autoload.php';
 if (! function_exists('getEnvironment')) {
     function getEnvironment()
     {
-        $env = parse_ini_file($_SERVER['DOCUMENT_ROOT'] . '/.env', false, INI_SCANNER_RAW);
+        $env = parse_ini_file(dirname(__DIR__) . '/.env', false, INI_SCANNER_RAW);
         return $env['environment'];
     }
 }
@@ -16,7 +16,12 @@ if (! function_exists('getEnvironment')) {
 if (! function_exists('getConfig')) {
     function getConfig($value)
     {
-        $env = parse_ini_file($_SERVER['DOCUMENT_ROOT'] . '/.env', false, INI_SCANNER_RAW);
+        static $env;
+
+        if ($env === null) {
+            $envFile = dirname(__DIR__) . '/.env';
+            $env = parse_ini_file($envFile, false, INI_SCANNER_RAW);
+        }
 
         $environment = $env['environment'];
 

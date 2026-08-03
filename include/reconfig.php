@@ -1,5 +1,10 @@
 <?php
-if (session_status() == PHP_SESSION_NONE) {
+$requestStartedAt = microtime(true);
+
+// API endpoints are stateless. Starting a file-backed PHP session here makes
+// concurrent mobile requests wait for one another on the same session lock.
+$isApiRequest = strpos(str_replace('\\', '/', $_SERVER['SCRIPT_FILENAME'] ?? ''), '/user_api/') !== false;
+if (! $isApiRequest && session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
@@ -9,8 +14,6 @@ $db_server = getConfig('DB_SERVER');
 $db_user = getConfig('DB_USER');
 $db_pass = getConfig('DB_PASS');
 $db_name = getConfig('DB_NAME');
-$db_connection = getConfig('DB_MYSQL_CONNECT');
-
 // Connection details
 define("DB_SERVER", $db_server); // Azure database server address
 define("DB_USER", $db_user); // Your username
@@ -24,11 +27,29 @@ try {
     //Should be a message a typical user could understand
 }
 
-$set = $rstate->query("SELECT * FROM `tbl_setting`")
+$set = $rstate->query("SELECT * FROM `tbl_setting` LIMIT 1")
     ->fetch_assoc();
 date_default_timezone_set($set['timezone']);
 
-$main = $rstate->query("SELECT * FROM `tbl_prop`")->fetch_assoc();
+$main = $rstate->query("SELECT * FROM `tbl_prop` LIMIT 1")->fetch_assoc();
+
+// Leave actionable evidence for production-only latency without logging bodies
+// or credentials. Requests faster than two seconds do not touch the filesystem.
+register_shutdown_function(static function () use ($requestStartedAt) {
+    $elapsed = microtime(true) - $requestStartedAt;
+    if ($elapsed < 2.0) {
+        return;
+    }
+
+    $uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: 'unknown';
+    logger(sprintf(
+        'slow_request duration_ms=%d method=%s path=%s peak_memory_mb=%.1f',
+        (int) round($elapsed * 1000),
+        $_SERVER['REQUEST_METHOD'] ?? 'unknown',
+        $uri,
+        memory_get_peak_usage(true) / 1048576
+    ));
+});
 
 // echo '<pre>'.htmlspecialchars($main['data']).'</pre>'; exit;
 if (isset($_SESSION["stype"]) && $_SESSION["stype"] == 'Staff'){

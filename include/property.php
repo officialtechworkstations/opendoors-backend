@@ -1051,7 +1051,8 @@ if (isset($_POST["type"])) {
         $mobile = $_POST["mobile"];
         $party_allowed = $_POST["party_allowed"];
         $party_cost = $_POST["party_cost"];
-        $is_featured = $_POST["featured_property"];
+        // Unchecked checkboxes are omitted from POST entirely.
+        $is_featured = isset($_POST["featured_property"]) && $_POST["featured_property"] === "1" ? "1" : "0";
         $caution_fee = $_POST["caution_fee"];
         $target_dir = dirname(dirname(__FILE__)) . "/images/property/";
         $url = "images/property/";
@@ -1153,13 +1154,14 @@ if (isset($_POST["type"])) {
         $mobile = $_POST["mobile"];
         $party_allowed = $_POST["party_allowed"];
         $party_cost = $_POST["party_cost"];
-        $is_featured = $_POST["featured_property"] ? "1" : "0";
+        // Unchecked checkboxes are omitted from POST entirely.
+        $is_featured = isset($_POST["featured_property"]) && $_POST["featured_property"] === "1" ? "1" : "0";
 
         $caution_fee = $_POST["caution_fee"];
         $target_dir = dirname(dirname(__FILE__)) . "/images/property/";
         $url = "images/property/";
         $user_id = "0";
-        $id = $_POST["id"];
+        $id = (int) $_POST["id"];
         $listing_date = date("Y-m-d H:i:s");
         $price = $_POST["price"];
         $temp = explode(".", $_FILES["cat_img"]["name"]);
@@ -1195,7 +1197,10 @@ if (isset($_POST["type"])) {
                 "is_featured" => $is_featured,
                 "caution_fee" => $caution_fee,
             ];
-            $where = "where id=" . $id . " and add_user_id=" . $user_id . "";
+            // This is the admin editor and it lists properties from every
+            // owner. Restricting this update to add_user_id=0 silently skipped
+            // host-created properties while still returning query success.
+            $where = "where id=" . $id;
             $h = new Estate();
             $check = $h->restateupdateData($field, $table, $where);
 
@@ -1235,7 +1240,7 @@ if (isset($_POST["type"])) {
                 "is_featured" => $is_featured,
                 "caution_fee" => $caution_fee,
             ];
-            $where = "where id=" . $id . " and add_user_id=" . $user_id . "";
+            $where = "where id=" . $id;
             $h = new Estate();
             $check = $h->restateupdateData($field, $table, $where);
             if ($check == 1) {

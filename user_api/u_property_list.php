@@ -13,18 +13,25 @@ if ($uid == '') {
 } else {
 $pol = array();
 $c = array();
-$sel = $rstate->query("SELECT tbl_property.*, (
+$sel = $rstate->query("SELECT tbl_property.*, c.title AS property_type_title,
+	COALESCE(ROUND(r.avg_rate, 0), tbl_property.rate) AS effective_rate, (
 	SELECT GROUP_CONCAT(`title`) 
 	FROM `tbl_facility` 
 	WHERE find_in_set(tbl_facility.id,tbl_property.facility)) as facility_select 
-		FROM tbl_property 
+		FROM tbl_property
+		LEFT JOIN tbl_category c ON c.id = tbl_property.ptype
+		LEFT JOIN (
+			SELECT prop_id, AVG(total_rate) AS avg_rate
+			FROM tbl_book
+			WHERE book_status='Completed' AND total_rate != 0
+			GROUP BY prop_id
+		) r ON r.prop_id = tbl_property.id
 		WHERE tbl_property.add_user_id = ".$uid."
 	ORDER BY tbl_property.is_featured DESC, tbl_property.rate DESC, tbl_property.price DESC");
 while($row = $sel->fetch_assoc()) {
 		$pol['id'] = $row['id'];
 		$pol['title'] = $row['title'];
-		$type = $rstate->query("select * from tbl_category where id=".$row['ptype']."")->fetch_assoc();
-		$pol['property_type'] = $type['title'];
+		$pol['property_type'] = $row['property_type_title'];
 		$pol['property_type_id'] = $row['ptype'];
 		$pol['image'] = $row['image'];
 		$pol['price'] = $row['price'];
@@ -43,16 +50,7 @@ while($row = $sel->fetch_assoc()) {
 		$pol['party_allowed'] = $row['party_allowed'];
 		$pol['party_cost'] = $row['party_cost'];
 		$pol['caution_fee'] = $row['caution_fee'];
-		$checkrate = $rstate->query("SELECT *  FROM tbl_book where prop_id=".$row['id']." and book_status='Completed' and total_rate !=0")->num_rows;
-		if($checkrate !=0)
-		{
-			$rdata_rest = $rstate->query("SELECT sum(total_rate)/count(*) as rate_rest FROM tbl_book where prop_id=".$row['id']." and book_status='Completed' and total_rate !=0")->fetch_assoc();
-			$pol['rate'] = number_format((float)$rdata_rest['rate_rest'], 0, '.', '');
-		}
-		else 
-		{
-		$pol['rate'] = $row['rate'];
-		}
+		$pol['rate'] = $row['effective_rate'];
 		$pol['description'] = $row['description'];
 		$pol['address'] = $row['address'];
 		$c[] = $pol;
@@ -69,4 +67,4 @@ $returnArr = array("proplist"=>$c,"ResponseCode"=>"200","Result"=>"true","Respon
 }
 }
 echo json_encode($returnArr);
-?>
+exit;
