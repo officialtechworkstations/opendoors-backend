@@ -19,6 +19,10 @@ require $root . '/include/functions.php';
 
 echo "Environment: " . getEnvironment() . "\n";
 
+// Return false on SQL errors (instead of throwing) so the "already applied"
+// check below can run and the script stays re-runnable.
+mysqli_report(MYSQLI_REPORT_OFF);
+
 $mysqli = new mysqli(
     getConfig('DB_SERVER'),
     getConfig('DB_USER'),
@@ -33,6 +37,7 @@ $mysqli->set_charset('utf8mb4');
 
 $migrations = [
     '20260807120000__add_payout_disbursement_columns.txt',
+    '20260807130000__add_bank_code_to_payout_setting.txt',
 ];
 
 $ignorable = ['Duplicate column', 'Duplicate key name', 'already exists', 'Duplicate'];

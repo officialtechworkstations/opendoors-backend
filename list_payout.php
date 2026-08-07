@@ -80,6 +80,17 @@ if ($_SESSION['stype'] == 'Staff' && !in_array('Read', $payout_per)) {
 							$prow       = $rstate->query("select * from payout_setting where id=".$payout_id."")->fetch_assoc();
 							$powner     = $rstate->query("select name,ccode,mobile from tbl_user where id=".(int)$prow['owner_id']."")->fetch_assoc();
 							$active_gws = $rstate->query("select id,title from tbl_payment_list where status=1 order by title asc");
+
+							// Host payout destination (read-only, method-aware).
+							if (strtoupper($prow['r_type']) === 'UPI') {
+								$acc_html = 'UPI ID: <b>'.htmlspecialchars($prow['upi_id']).'</b>';
+							} elseif (stripos($prow['r_type'], 'bank') !== false) {
+								$acc_html = 'Bank: <b>'.htmlspecialchars($prow['bank_name']).'</b>'.(!empty($prow['bank_code']) ? ' <span class="text-muted">('.htmlspecialchars($prow['bank_code']).')</span>' : '')
+									.'<br>Account No: <b>'.htmlspecialchars($prow['acc_number']).'</b>'
+									.'<br>Account Name: <b>'.htmlspecialchars($prow['acc_name']).'</b>';
+							} else {
+								$acc_html = 'PayPal: <b>'.htmlspecialchars($prow['paypal_id']).'</b>';
+							}
 							?>
 							<div class="mb-3">
 								<a href="list_payout.php" class="btn btn-outline-secondary btn-sm">&larr; Back to list</a>
@@ -89,6 +100,12 @@ if ($_SESSION['stype'] == 'Staff' && !in_array('Read', $payout_per)) {
 								Requested: <b><?php echo $prow['amt'].' '.$set['currency']; ?></b>
 								(<?php echo htmlspecialchars($prow['r_type']); ?>)
 							</h5>
+
+							<!-- Host account details (read-only) -->
+							<div style="background:#f6f7fb;border:1px solid #e6e8f0;padding:12px 14px;border-radius:6px;margin-bottom:16px;max-width:520px;">
+								<div style="font-weight:600;margin-bottom:6px;">Host account details</div>
+								<div><?php echo $acc_html; ?></div>
+							</div>
 
 							<!-- Mode chooser -->
 							<ul class="nav nav-tabs" role="tablist">
@@ -117,6 +134,7 @@ if ($_SESSION['stype'] == 'Staff' && !in_array('Read', $payout_per)) {
 								<div class="form-group mb-3" style="max-width:420px">
 									<label>Recipient Bank</label>
 									<select class="form-control" id="pg-bank"><option value="">Loading banks…</option></select>
+									<small id="pg-bank-hint" class="text-muted"></small>
 								</div>
 
 								<div class="form-group mb-3" style="max-width:420px">
@@ -175,6 +193,15 @@ if ($_SESSION['stype'] == 'Staff' && !in_array('Read', $payout_per)) {
 								var api = 'paystack/payout.php';
 								var verified = false;
 
+								// Host-stored destination (for bank pre-select + name comparison).
+								var storedBankCode = <?php echo json_encode($prow['bank_code'] ?? ''); ?>;
+								var storedBankName = <?php echo json_encode($prow['bank_name'] ?? ''); ?>;
+								var storedAccName  = <?php echo json_encode($prow['acc_name'] ?? ''); ?>;
+								var resolvedName   = '';
+								var nameMismatch   = false;
+
+								function norm(s){ return (s||'').toString().toLowerCase().replace(/[^a-z0-9]/g,''); }
+
 								function q(id){ return document.getElementById(id); }
 								function gw(){ return q('pg-gateway').value; }
 								function supported(){ var o=q('pg-gateway').selectedOptions[0]; return o && o.getAttribute('data-supported')==='1'; }
@@ -215,7 +242,29 @@ if ($_SESSION['stype'] == 'Staff' && !in_array('Read', $payout_per)) {
 										var html='<option value="">Select bank…</option>';
 										res.banks.forEach(function(b){ html += '<option value="'+b.code+'">'+b.name+'</option>'; });
 										q('pg-bank').innerHTML = html;
+										preselectBank();
 									});
+								}
+
+								// Pre-select the host's bank: by stored bank_code if we have it,
+								// else a best-effort name match against the dropdown options.
+								function preselectBank(){
+									var sel = q('pg-bank');
+									q('pg-bank-hint').textContent = '';
+
+									if(storedBankCode){
+										for(var i=0;i<sel.options.length;i++){
+											if(sel.options[i].value === storedBankCode){ sel.selectedIndex = i; return; }
+										}
+									}
+									if(storedBankName){
+										var target = norm(storedBankName);
+										for(var j=0;j<sel.options.length;j++){
+											var t = norm(sel.options[j].text);
+											if(t && (t.indexOf(target) > -1 || target.indexOf(t) > -1)){ sel.selectedIndex = j; return; }
+										}
+										q('pg-bank-hint').textContent = 'Could not auto-match "' + storedBankName + '" — please select the bank manually.';
+									}
 								}
 
 								q('pg-check-balance').addEventListener('click', function(){
@@ -232,7 +281,15 @@ if ($_SESSION['stype'] == 'Staff' && !in_array('Read', $payout_per)) {
 									q('pg-accname').textContent='Verifying…';
 									post({action:'resolve', account_number:q('pg-account').value, bank_code:q('pg-bank').value}).then(function(res){
 										if(res.ok){
-											q('pg-accname').innerHTML = '<b class="text-success">'+res.account_name+'</b>';
+											resolvedName = res.account_name || '';
+											nameMismatch = storedAccName ? (norm(resolvedName) !== norm(storedAccName)) : false;
+											var matchTag = !storedAccName
+												? '<span class="text-muted">(no stored name to compare)</span>'
+												: (nameMismatch ? '<span class="text-danger">&#10007; does not match stored name</span>'
+												               : '<span class="text-success">&#10003; matches stored name</span>');
+											q('pg-accname').innerHTML =
+												'<div>Stored name: <b>'+(storedAccName || '&mdash;')+'</b></div>'+
+												'<div>Bank returned: <b>'+resolvedName+'</b> '+matchTag+'</div>';
 											verified=true; q('pg-send').disabled=false;
 										} else {
 											q('pg-accname').innerHTML = '<span class="text-danger">'+res.error+'</span>';
@@ -242,7 +299,11 @@ if ($_SESSION['stype'] == 'Staff' && !in_array('Read', $payout_per)) {
 
 								q('pg-send').addEventListener('click', function(){
 									if(!verified){ msg('Please verify the account first.',false); return; }
-									if(!confirm('Send this payout now? This moves real money.')) return;
+									// Only ask for confirmation when the resolved name doesn't match the
+									// stored account name; a clean match auto-completes.
+									if(nameMismatch){
+										if(!confirm('⚠ Account name mismatch.\n\nStored name: '+storedAccName+'\nBank returned: '+resolvedName+'\n\nThe names do not match. Send the payout anyway?')) return;
+									}
 									q('pg-send').disabled=true; msg('Sending…',true);
 									post({action:'transfer', payout_id:payoutId, account_number:q('pg-account').value, bank_code:q('pg-bank').value}).then(function(res){
 										if(res.ok && res.done){ msg(res.message+' Reloading…',true); setTimeout(function(){location.href='list_payout.php';},1500); return; }
@@ -338,23 +399,28 @@ while($row = $stmt->fetch_assoc())
 									?>
 									<td><?php echo $vdetails['name'];?></td>
 									<?php 
-									if($row['r_type'] == 'UPI')
+									if(strtoupper($row['r_type']) === 'UPI')
 									{
 									  ?>
-									  <td><?php echo $row['upi_id'];?></td>
-									  <?php 
+									  <td><?php echo htmlspecialchars($row['upi_id']);?></td>
+									  <?php
 									}
-									else if($row['r_type'] == 'BANK_Transfer')
+									else if(stripos($row['r_type'], 'bank') !== false)
 									{
+									 $bankline  = 'Bank Name: '.htmlspecialchars($row['bank_name']);
+									 if(!empty($row['bank_code'])) { $bankline .= ' ('.htmlspecialchars($row['bank_code']).')'; }
+									 $bankline .= '<br>A/C No: '.htmlspecialchars($row['acc_number']);
+									 $bankline .= '<br>A/C Name: '.htmlspecialchars($row['acc_name']);
+									 if(!empty($row['ifsc_code'])) { $bankline .= '<br>IFSC: '.htmlspecialchars($row['ifsc_code']); }
 									 ?>
-									 <td><?php echo 'Bank Name: '.$row['bank_name'].'<br>'.'A/C No: '.$row['acc_number'].'<br>'.'A/C Name: '.$row['receipt_name'].'<br>'.'IFSC CODE: '.$row['ifsc'].'<br>';?></td>
-									 <?php 
+									 <td><?php echo $bankline;?></td>
+									 <?php
 									}
-									else 
+									else
 									{
 									   ?>
-									   <td><?php echo $row['paypal_id'];?></td>
-									   <?php 
+									   <td><?php echo htmlspecialchars($row['paypal_id']);?></td>
+									   <?php
 									}
 									?>
 									

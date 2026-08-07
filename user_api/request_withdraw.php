@@ -14,6 +14,7 @@ if ($data['owner_id'] == '' or $data['amt'] == '' or $data['r_type'] == '') {
 	$r_type = $data['r_type'];
 	$acc_number = $data['acc_number'];
 	$bank_name = $data['bank_name'];
+	$bank_code = isset($data['bank_code']) ? $rstate->real_escape_string($data['bank_code']) : '';
 	$acc_name = $data['acc_name'];
 	// $ifsc_code = $data['ifsc_code'];
 	$upi_id = $data['upi_id'];
@@ -37,8 +38,8 @@ if ($data['owner_id'] == '' or $data['amt'] == '' or $data['r_type'] == '') {
 	} else {
 		$timestamp = date("Y-m-d H:i:s");
 		$table = "payout_setting";
-		$field_values = array("owner_id", "amt", "status", "r_date", "r_type", "acc_number", "bank_name", "acc_name", "upi_id", "paypal_id");
-		$data_values = array("$owner_id", "$amt", "pending", "$timestamp", "$r_type", "$acc_number", "$bank_name", "$acc_name", "$upi_id", "$paypal_id");
+		$field_values = array("owner_id", "amt", "status", "r_date", "r_type", "acc_number", "bank_name", "bank_code", "acc_name", "upi_id", "paypal_id");
+		$data_values = array("$owner_id", "$amt", "pending", "$timestamp", "$r_type", "$acc_number", "$bank_name", "$bank_code", "$acc_name", "$upi_id", "$paypal_id");
 
 		$h = new Estate();
 		$check = $h->restateinsertdata_Api($field_values, $data_values, $table);
