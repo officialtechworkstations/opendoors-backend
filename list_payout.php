@@ -76,38 +76,213 @@ if ($_SESSION['stype'] == 'Staff' && !in_array('Read', $payout_per)) {
 				    <?php 
 	if(isset($_GET['payout']))
 						{
+							$payout_id  = (int) $_GET['payout'];
+							$prow       = $rstate->query("select * from payout_setting where id=".$payout_id."")->fetch_assoc();
+							$powner     = $rstate->query("select name,ccode,mobile from tbl_user where id=".(int)$prow['owner_id']."")->fetch_assoc();
+							$active_gws = $rstate->query("select id,title from tbl_payment_list where status=1 order by title asc");
 							?>
-							<form class="form" method="post"  enctype="multipart/form-data">
-							<div class="form-body">
-								
+							<div class="mb-3">
+								<a href="list_payout.php" class="btn btn-outline-secondary btn-sm">&larr; Back to list</a>
+							</div>
+							<h5 class="mb-3">
+								Payout to <b><?php echo htmlspecialchars($powner['name']); ?></b> &mdash;
+								Requested: <b><?php echo $prow['amt'].' '.$set['currency']; ?></b>
+								(<?php echo htmlspecialchars($prow['r_type']); ?>)
+							</h5>
 
-								
+							<!-- Mode chooser -->
+							<ul class="nav nav-tabs" role="tablist">
+								<li class="nav-item"><a class="nav-link active" data-mode="auto"   href="javascript:void(0)">Auto (Gateway)</a></li>
+								<li class="nav-item"><a class="nav-link"        data-mode="manual" href="javascript:void(0)">Manual</a></li>
+							</ul>
 
-								
-								
-								
+							<div class="pt-3">
+							<!-- ============ AUTO ============ -->
+							<div id="mode-auto">
+								<div class="form-group mb-3" style="max-width:420px">
+									<label>Payment Gateway</label>
+									<select class="form-control" id="pg-gateway">
+										<?php while($gw = $active_gws->fetch_assoc()) { ?>
+											<option value="<?php echo $gw['id']; ?>" data-supported="<?php echo ($gw['id']==6?1:0); ?>"><?php echo htmlspecialchars($gw['title']); ?></option>
+										<?php } ?>
+									</select>
+									<small id="pg-unsupported" class="text-danger" style="display:none">Auto disbursement isn't wired up for this gateway yet. Use Manual, or pick Paystack.</small>
+								</div>
 
-								
-<div class="form-group mb-3">
-                                            <label>Payout Image</label>
-                                            <input type="file" class="form-control" name="cat_img" required="">
-											<input type="hidden" name="type" value="com_payout">
-											<input type="hidden" name="payout_id" value="<?php echo $_GET['payout'];?>"/>
-                                        </div>
-								
+								<div class="form-group mb-3">
+									<button type="button" class="btn btn-outline-primary btn-sm" id="pg-check-balance">Check Balance</button>
+									<span id="pg-balance" class="ms-2"></span>
+								</div>
+
+								<div class="form-group mb-3" style="max-width:420px">
+									<label>Recipient Bank</label>
+									<select class="form-control" id="pg-bank"><option value="">Loading banks…</option></select>
+								</div>
+
+								<div class="form-group mb-3" style="max-width:420px">
+									<label>Account Number</label>
+									<input type="text" class="form-control" id="pg-account" value="<?php echo htmlspecialchars($prow['acc_number']); ?>">
+								</div>
+
+								<div class="form-group mb-3">
+									<button type="button" class="btn btn-outline-primary btn-sm" id="pg-verify">Verify Account</button>
+									<span id="pg-accname" class="ms-2"></span>
+								</div>
+
+								<div class="form-group mb-3" id="pg-otp-wrap" style="display:none;max-width:420px">
+									<label>OTP (sent by Paystack)</label>
+									<input type="text" class="form-control" id="pg-otp" placeholder="Enter OTP">
+									<button type="button" class="btn btn-success btn-sm mt-2" id="pg-finalize">Finalize Transfer</button>
+								</div>
+
+								<div class="text-left">
+									<button type="button" class="btn btn-primary" id="pg-send" disabled>Send Payout <i class="fas fa-paper-plane"></i></button>
+								</div>
+								<div id="pg-msg" class="mt-3"></div>
 							</div>
 
-							 <div class=" text-left">
-                                        <button  class="btn btn-primary">Complete Payout <i class="fas fa-receipt"></i></button>
-                                    </div>
-							
-							
-						</form>
-						
-						<?php 
+							<!-- ============ MANUAL ============ -->
+							<div id="mode-manual" style="display:none">
+								<form class="form" method="post" enctype="multipart/form-data" style="max-width:520px">
+									<input type="hidden" name="type" value="manual_payout">
+									<input type="hidden" name="payout_id" value="<?php echo $payout_id; ?>"/>
+									<div class="form-group mb-3">
+										<label>Date Payment Was Made <span class="text-danger">*</span></label>
+										<input type="date" class="form-control" name="paid_date" required>
+									</div>
+									<div class="form-group mb-3">
+										<label>Amount <span class="text-danger">*</span></label>
+										<input type="number" step="0.01" class="form-control" name="paid_amount" value="<?php echo $prow['amt']; ?>" required>
+									</div>
+									<div class="form-group mb-3">
+										<label>Transaction ID <small class="text-muted">(optional)</small></label>
+										<input type="text" class="form-control" name="transaction_id" placeholder="e.g. bank reference">
+									</div>
+									<div class="form-group mb-3">
+										<label>Receipt / Evidence <span class="text-danger">*</span></label>
+										<input type="file" class="form-control" name="cat_img" required>
+									</div>
+									<div class="text-left">
+										<button class="btn btn-primary">Record Payout <i class="fas fa-receipt"></i></button>
+									</div>
+								</form>
+							</div>
+							</div>
+
+							<script>
+							(function(){
+								var payoutId = <?php echo $payout_id; ?>;
+								var api = 'paystack/payout.php';
+								var verified = false;
+
+								function q(id){ return document.getElementById(id); }
+								function gw(){ return q('pg-gateway').value; }
+								function supported(){ var o=q('pg-gateway').selectedOptions[0]; return o && o.getAttribute('data-supported')==='1'; }
+								function msg(t,ok){ q('pg-msg').innerHTML = '<span class="'+(ok?'text-success':'text-danger')+'">'+t+'</span>'; }
+
+								function post(params){
+									params.action = params.action;
+									var body = new URLSearchParams(params);
+									body.append('gateway_id', gw());
+									return fetch(api, {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: body})
+										.then(function(r){ return r.json(); });
+								}
+
+								// Tab switching
+								document.querySelectorAll('.nav-link[data-mode]').forEach(function(a){
+									a.addEventListener('click', function(){
+										document.querySelectorAll('.nav-link[data-mode]').forEach(function(x){x.classList.remove('active');});
+										a.classList.add('active');
+										q('mode-auto').style.display   = a.dataset.mode==='auto'   ? 'block':'none';
+										q('mode-manual').style.display = a.dataset.mode==='manual' ? 'block':'none';
+									});
+								});
+
+								function refreshSupport(){
+									var ok = supported();
+									q('pg-unsupported').style.display = ok ? 'none':'block';
+									q('pg-check-balance').disabled = !ok;
+									q('pg-verify').disabled = !ok;
+									if(!ok){ q('pg-send').disabled = true; }
+									if(ok){ loadBanks(); }
+								}
+								q('pg-gateway').addEventListener('change', refreshSupport);
+
+								function loadBanks(){
+									q('pg-bank').innerHTML = '<option value="">Loading banks…</option>';
+									post({action:'banks'}).then(function(res){
+										if(!res.ok){ q('pg-bank').innerHTML='<option value="">Could not load banks</option>'; return; }
+										var html='<option value="">Select bank…</option>';
+										res.banks.forEach(function(b){ html += '<option value="'+b.code+'">'+b.name+'</option>'; });
+										q('pg-bank').innerHTML = html;
+									});
+								}
+
+								q('pg-check-balance').addEventListener('click', function(){
+									q('pg-balance').textContent = 'Checking…';
+									post({action:'balance'}).then(function(res){
+										q('pg-balance').innerHTML = res.ok
+											? '<b>Balance: '+Number(res.balance).toLocaleString()+' '+res.currency+'</b>'
+											: '<span class="text-danger">'+res.error+'</span>';
+									});
+								});
+
+								q('pg-verify').addEventListener('click', function(){
+									verified=false; q('pg-send').disabled=true;
+									q('pg-accname').textContent='Verifying…';
+									post({action:'resolve', account_number:q('pg-account').value, bank_code:q('pg-bank').value}).then(function(res){
+										if(res.ok){
+											q('pg-accname').innerHTML = '<b class="text-success">'+res.account_name+'</b>';
+											verified=true; q('pg-send').disabled=false;
+										} else {
+											q('pg-accname').innerHTML = '<span class="text-danger">'+res.error+'</span>';
+										}
+									});
+								});
+
+								q('pg-send').addEventListener('click', function(){
+									if(!verified){ msg('Please verify the account first.',false); return; }
+									if(!confirm('Send this payout now? This moves real money.')) return;
+									q('pg-send').disabled=true; msg('Sending…',true);
+									post({action:'transfer', payout_id:payoutId, account_number:q('pg-account').value, bank_code:q('pg-bank').value}).then(function(res){
+										if(res.ok && res.done){ msg(res.message+' Reloading…',true); setTimeout(function(){location.href='list_payout.php';},1500); return; }
+										if(res.ok && res.need_otp){
+											q('pg-otp-wrap').style.display='block';
+											q('pg-finalize').dataset.transfer = res.transfer_code;
+											msg(res.message,true);
+											return;
+										}
+										msg(res.error||'Transfer failed.',false); q('pg-send').disabled=false;
+									});
+								});
+
+								q('pg-finalize').addEventListener('click', function(){
+									msg('Finalizing…',true);
+									post({action:'finalize', payout_id:payoutId, transfer_code:q('pg-finalize').dataset.transfer, otp:q('pg-otp').value}).then(function(res){
+										if(res.ok && res.done){ msg(res.message+' Reloading…',true); setTimeout(function(){location.href='list_payout.php';},1500); return; }
+										msg(res.error||'Finalize failed.',false);
+									});
+								});
+
+								refreshSupport();
+							})();
+							</script>
+						<?php
 						}
 						else 
 						{ ?>
+				<div class="row mb-3">
+					<div class="col-md-3">
+						<label class="col-form-label">Filter by status</label>
+						<select id="payout-status-filter" class="form-control">
+							<option value="">All</option>
+							<option value="pending">Pending</option>
+							<option value="processing">Processing</option>
+							<option value="completed">Completed</option>
+							<option value="failed">Failed</option>
+						</select>
+					</div>
+				</div>
 				<div class="table-responsive">
                 <table class="display" id="basic-1">
                         <thead>
@@ -123,7 +298,10 @@ if ($_SESSION['stype'] == 'Staff' && !in_array('Read', $payout_per)) {
                                     <th>Transfer Type</th>
 									<th>Vendor Mobile</th>
 									<th>Transfer Photo</th>
-									
+									<th>Method</th>
+									<th>Paid On</th>
+									<th>Transaction ID</th>
+
 									 <th>Status</th>
 <?php 
 												if($_SESSION['stype'] == 'Staff')
@@ -193,7 +371,37 @@ while($row = $stmt->fetch_assoc())
 									 
 									  <td><img src="<?php echo $row['proof']; ?>" width="70" height="80"/></td>
 									  <?php } ?>
-									 <td><?php echo ucfirst($row['status']);?></td>
+									 <?php
+									 // Method: auto (+ gateway name) / manual / not yet processed.
+									 if ($row['payout_mode'] == 'auto') {
+										 $gwname = 'Gateway';
+										 if (!empty($row['gateway_id'])) {
+											 $gwrow = $rstate->query("select title from tbl_payment_list where id=".(int)$row['gateway_id']."")->fetch_assoc();
+											 if ($gwrow) { $gwname = $gwrow['title']; }
+										 }
+										 $method = 'Auto <small class="text-muted">('.htmlspecialchars($gwname).')</small>';
+									 } elseif ($row['payout_mode'] == 'manual') {
+										 $method = 'Manual';
+									 } else {
+										 $method = '<span class="text-muted">&mdash;</span>';
+									 }
+									 ?>
+									 <td><?php echo $method; ?></td>
+									 <td>
+										 <?php
+										 if (!empty($row['paid_date'])) {
+											 echo htmlspecialchars($row['paid_date']);
+											 if (!empty($row['paid_amount'])) { echo '<br><small class="text-muted">'.$row['paid_amount'].' '.$set['currency'].'</small>'; }
+										 } else { echo '<span class="text-muted">&mdash;</span>'; }
+										 ?>
+									 </td>
+									 <td><?php echo !empty($row['transaction_id']) ? htmlspecialchars($row['transaction_id']) : '<span class="text-muted">&mdash;</span>'; ?></td>
+									 <?php
+									 $st = strtolower($row['status']);
+									 $badge_colors = ['pending'=>'#ff9f43','processing'=>'#0dcaf0','completed'=>'#28a745','failed'=>'#dc3545'];
+									 $badge_bg = isset($badge_colors[$st]) ? $badge_colors[$st] : '#6c757d';
+									 ?>
+									 <td><span style="background:<?php echo $badge_bg;?>;color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap;"><?php echo ucfirst($row['status']);?></span></td>
 									 
 									 <?php 
 												if($_SESSION['stype'] == 'Staff')
@@ -250,8 +458,19 @@ while($row = $stmt->fetch_assoc())
       </div>
     </div>
     <!-- latest jquery-->
-    <?php 
+    <?php
 require 'include/footer.php';
 ?>
+<script>
+// Status filter -> DataTables column search (Status is column index 10).
+window.addEventListener('load', function () {
+	var sel = document.getElementById('payout-status-filter');
+	if (!sel || !window.jQuery || !jQuery.fn.dataTable) { return; }
+	var dt = jQuery('#basic-1').DataTable();
+	sel.addEventListener('change', function () {
+		dt.column(10).search(this.value, false, false).draw();
+	});
+});
+</script>
   </body>
 </html>

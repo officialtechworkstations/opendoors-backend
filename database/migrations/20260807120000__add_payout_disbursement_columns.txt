@@ -1,0 +1,7 @@
+ALTER TABLE `payout_setting`
+  ADD `payout_mode` ENUM('manual','auto') DEFAULT NULL,
+  ADD `gateway_id` INT(11) DEFAULT NULL,
+  ADD `transaction_id` VARCHAR(191) DEFAULT NULL,
+  ADD `paid_amount` FLOAT DEFAULT NULL,
+  ADD `paid_date` DATE DEFAULT NULL,
+  ADD `gateway_response` TEXT DEFAULT NULL;

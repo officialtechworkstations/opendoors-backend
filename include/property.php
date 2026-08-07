@@ -1448,6 +1448,45 @@ if (isset($_POST["type"])) {
                 "action" => "list_payout.php",
             ];
         }
+    } elseif ($_POST["type"] == "manual_payout") {
+        // Admin records an off-platform payment: date, amount, optional txn id,
+        // and a required receipt/evidence image.
+        $payout_id      = (int) $_POST["payout_id"];
+        $paid_date      = $_POST["paid_date"];
+        $paid_amount    = $_POST["paid_amount"];
+        $transaction_id = isset($_POST["transaction_id"]) ? mysqli_real_escape_string($rstate, $_POST["transaction_id"]) : "";
+
+        $target_dir  = dirname(dirname(__FILE__)) . "/images/proof/";
+        $url         = "images/proof/";
+        $temp        = explode(".", $_FILES["cat_img"]["name"]);
+        $newfilename = round(microtime(true)) . "." . end($temp);
+        $target_file = $target_dir . basename($newfilename);
+        $url         = $url . basename($newfilename);
+
+        move_uploaded_file($_FILES["cat_img"]["tmp_name"], $target_file);
+
+        $table = "payout_setting";
+        $field = [
+            "proof"          => $url,
+            "status"         => "completed",
+            "payout_mode"    => "manual",
+            "paid_date"      => $paid_date,
+            "paid_amount"    => $paid_amount,
+            "transaction_id" => $transaction_id,
+        ];
+        $where = "where id=" . $payout_id . "";
+        $h     = new Estate();
+        $check = $h->restateupdateData($field, $table, $where);
+
+        if ($check == 1) {
+            $returnArr = [
+                "ResponseCode" => "200",
+                "Result" => "true",
+                "title" => "Payout Recorded Successfully!!",
+                "message" => "Payout section!",
+                "action" => "list_payout.php",
+            ];
+        }
     } elseif ($_POST["type"] == "update_status") {
         $id = $_POST["id"];
         $status = $_POST["status"];
