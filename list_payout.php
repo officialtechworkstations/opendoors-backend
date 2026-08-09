@@ -343,6 +343,17 @@ if ($_SESSION['stype'] == 'Staff' && !in_array('Read', $payout_per)) {
 							<option value="failed">Failed</option>
 						</select>
 					</div>
+					<div class="col-md-3">
+						<label class="col-form-label">Requested from</label>
+						<input type="date" id="payout-date-from" class="form-control">
+					</div>
+					<div class="col-md-3">
+						<label class="col-form-label">Requested to</label>
+						<input type="date" id="payout-date-to" class="form-control">
+					</div>
+					<div class="col-md-3 d-flex align-items-end">
+						<button type="button" id="payout-filter-clear" class="btn btn-outline-secondary">Clear</button>
+					</div>
 				</div>
 				<div class="table-responsive">
                 <table class="display" id="basic-1">
@@ -353,7 +364,8 @@ if ($_SESSION['stype'] == 'Staff' && !in_array('Read', $payout_per)) {
                                                 </th>
                                                
                                     <th>Amount</th>
-                                   
+									<th>Requested</th>
+
 									<th>Service Provider Name</th>
 									<th>Transfer Details</th>
                                     <th>Transfer Type</th>
@@ -382,7 +394,8 @@ if ($_SESSION['stype'] == 'Staff' && !in_array('Read', $payout_per)) {
                                             </thead>
                                         <tbody>
                                             <?php 
-											 $stmt = $rstate->query("SELECT * FROM `payout_setting`");
+											 // Pending first, completed last; newest request first within a status.
+											 $stmt = $rstate->query("SELECT * FROM `payout_setting` ORDER BY FIELD(status,'pending','processing','failed','completed'), r_date DESC");
 $i = 0;
 while($row = $stmt->fetch_assoc())
 {
@@ -394,7 +407,8 @@ while($row = $stmt->fetch_assoc())
                                                 </td>
                                                
                                     <td><?php echo $row['amt'].' '.$set['currency'];?></td>
-									<?php 
+									<td><?php echo !empty($row['r_date']) ? date('Y-m-d', strtotime($row['r_date'])) : ''; ?></td>
+									<?php
 									$vdetails = $rstate->query("select * from tbl_user where id=".$row['owner_id']."")->fetch_assoc();
 									?>
 									<td><?php echo $vdetails['name'];?></td>
@@ -528,13 +542,39 @@ while($row = $stmt->fetch_assoc())
 require 'include/footer.php';
 ?>
 <script>
-// Status filter -> DataTables column search (Status is column index 10).
+// Payout list filters. Columns: 2 = Requested date, 11 = Status.
 window.addEventListener('load', function () {
-	var sel = document.getElementById('payout-status-filter');
-	if (!sel || !window.jQuery || !jQuery.fn.dataTable) { return; }
-	var dt = jQuery('#basic-1').DataTable();
-	sel.addEventListener('change', function () {
-		dt.column(10).search(this.value, false, false).draw();
+	var statusSel = document.getElementById('payout-status-filter');
+	if (!statusSel || !window.jQuery || !jQuery.fn.dataTable) { return; }
+
+	var dt      = jQuery('#basic-1').DataTable();
+	var fromEl  = document.getElementById('payout-date-from');
+	var toEl    = document.getElementById('payout-date-to');
+	var clearEl = document.getElementById('payout-filter-clear');
+
+	// Status -> column search.
+	statusSel.addEventListener('change', function () {
+		dt.column(11).search(this.value, false, false).draw();
+	});
+
+	// Requested-date range -> custom search on the "Requested" column (index 2, YYYY-MM-DD).
+	jQuery.fn.dataTable.ext.search.push(function (settings, data) {
+		if (settings.nTable !== dt.table().node()) { return true; }
+		var from = fromEl.value, to = toEl.value;
+		if (!from && !to) { return true; }
+		var d = (data[2] || '').substr(0, 10);
+		if (!d) { return false; }
+		if (from && d < from) { return false; }
+		if (to && d > to) { return false; }
+		return true;
+	});
+
+	fromEl.addEventListener('change', function () { dt.draw(); });
+	toEl.addEventListener('change', function () { dt.draw(); });
+
+	clearEl.addEventListener('click', function () {
+		statusSel.value = ''; fromEl.value = ''; toEl.value = '';
+		dt.column(11).search('').draw();
 	});
 });
 </script>
