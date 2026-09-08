@@ -1,0 +1,227 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OpenDoors User API",
+    "version": "1.0.0",
+    "description": "API Documentation for OpenDoors User API, featuring standard JSON responses and Multipart Form capabilities."
+  },
+  "servers": [
+    {
+      "url": "..",
+      "description": "Current Environment API Server"
+    }
+  ],
+  "paths": {
+    "/reels/create.php": {
+      "post": {
+        "summary": "Create a new Reel",
+        "description": "Upload a new video reel for a property. Rejects if a reel already exists.",
+        "tags": ["Reels"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "uid": { "type": "string", "example": "1" },
+                  "prop_id": { "type": "string", "example": "42" },
+                  "video": { "type": "string", "format": "binary", "description": "Max 300MB. Formats: mp4, mov, avi, mkv, webm." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "ResponseCode": "200",
+                  "Result": "true",
+                  "ResponseMsg": "Reel uploaded and processing started."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "ResponseCode": "401",
+                  "Result": "false",
+                  "ResponseMsg": "A reel already exists for this property. Use update instead."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reels/update.php": {
+      "post": {
+        "summary": "Update an existing Reel",
+        "description": "Replace the video of an existing reel.",
+        "tags": ["Reels"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "uid": { "type": "string", "example": "1" },
+                  "reel_id": { "type": "string", "example": "15" },
+                  "video": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "ResponseCode": "200",
+                  "Result": "true",
+                  "ResponseMsg": "Reel updated and processing started."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reels/delete.php": {
+      "post": {
+        "summary": "Delete a Reel",
+        "description": "Delete a reel and its associated files.",
+        "tags": ["Reels"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "uid": { "type": "string", "example": "1" },
+                  "reel_id": { "type": "string", "example": "15" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "ResponseCode": "200",
+                  "Result": "true",
+                  "ResponseMsg": "Reel deleted successfully."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reels/index.php": {
+      "get": {
+        "summary": "List all active Reels",
+        "description": "Fetches a paginated list of all active (fully processed) reels.",
+        "tags": ["Reels"],
+        "parameters": [
+          {
+            "name": "last_id",
+            "in": "query",
+            "schema": { "type": "integer", "default": 0 },
+            "description": "Cursor for pagination (ID of the last item in previous page)."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "ResponseCode": "200",
+                  "Result": "true",
+                  "ResponseMsg": "Reels fetched successfully.",
+                  "reels": [
+                    {
+                      "reel_id": "15",
+                      "prop_id": "42",
+                      "thumbnail_path": "images/property/temp_reel_abc.png",
+                      "property_title": "Cozy Apartment",
+                      "property_address": "123 Main St",
+                      "property_image": "prop_image.jpg"
+                    }
+                  ],
+                  "next_cursor": 14
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reels/read.php": {
+      "get": {
+        "summary": "Get a specific Reel",
+        "description": "Fetch details for a single reel including video_path.",
+        "tags": ["Reels"],
+        "parameters": [
+          {
+            "name": "reel_id",
+            "in": "query",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "prop_id",
+            "in": "query",
+            "schema": { "type": "integer" },
+            "description": "Can be used instead of reel_id to fetch the reel for a property."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "ResponseCode": "200",
+                  "Result": "true",
+                  "ResponseMsg": "Reel fetched successfully.",
+                  "reel": {
+                    "reel_id": "15",
+                    "prop_id": "42",
+                    "video_path": "images/property/temp_reel_abc.mp4",
+                    "thumbnail_path": "images/property/temp_reel_abc.png",
+                    "reel_status": "1",
+                    "property_title": "Cozy Apartment",
+                    "property_address": "123 Main St",
+                    "property_image": "prop_image.jpg",
+                    "property_price": "1200",
+                    "beds": "2",
+                    "bathroom": "1"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
