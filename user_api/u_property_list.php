@@ -13,13 +13,14 @@ if ($uid == '') {
 } else {
 $pol = array();
 $c = array();
-$sel = $rstate->query("SELECT tbl_property.*, c.title AS property_type_title,
+$sel = $rstate->query("SELECT tbl_property.*, c.title AS property_type_title, rl.id AS reel_id, rl.thumbnail_path AS reel_thumbnail,
 	COALESCE(ROUND(r.avg_rate, 0), tbl_property.rate) AS effective_rate, (
 	SELECT GROUP_CONCAT(`title`) 
 	FROM `tbl_facility` 
 	WHERE find_in_set(tbl_facility.id,tbl_property.facility)) as facility_select 
 		FROM tbl_property
 		LEFT JOIN tbl_category c ON c.id = tbl_property.ptype
+		LEFT JOIN tbl_reels rl ON rl.prop_id = tbl_property.id AND rl.status = 1
 		LEFT JOIN (
 			SELECT prop_id, AVG(total_rate) AS avg_rate
 			FROM tbl_book
@@ -53,6 +54,8 @@ while($row = $sel->fetch_assoc()) {
 		$pol['rate'] = $row['effective_rate'];
 		$pol['description'] = $row['description'];
 		$pol['address'] = $row['address'];
+		$pol['reel_id'] = $row['reel_id'];
+		$pol['reel_thumbnail'] = $row['reel_thumbnail'];
 		$c[] = $pol;
 	
 	

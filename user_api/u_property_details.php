@@ -102,6 +102,13 @@ if ($pro_id == '' or $uid == '') {
 		}
 	}
 
+    $reel_data = null;
+    $reel_q = $rstate->query("SELECT id, video_path, thumbnail_path, status FROM tbl_reels WHERE prop_id=" . $sel['id'] . " AND status = 1 LIMIT 1");
+    if ($reel_q && $reel_q->num_rows > 0) {
+        $reel_data = $reel_q->fetch_assoc();
+    }
+    $fp['reel'] = $reel_data;
+
     $count_review = $rstate->query("select * from tbl_book where prop_id=" . $pro_id . " and book_status='Completed' and is_rate=1 order by id desc")->num_rows;
     $bov = array();
     $kol = array();

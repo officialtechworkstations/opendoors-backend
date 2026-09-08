@@ -1,0 +1,11 @@
+CREATE TABLE `tbl_reels` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `prop_id` int(11) NOT NULL,
+  `video_path` text NOT NULL,
+  `thumbnail_path` text NOT NULL,
+  `status` int(11) NOT NULL DEFAULT 1,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `prop_id_index` (`prop_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
