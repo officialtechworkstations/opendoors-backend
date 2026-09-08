@@ -308,3 +308,22 @@ if (! function_exists('oneSignalNewsLetterSubscription')) {
         ], true));
     }
 }
+
+if (! function_exists('successResponse')) {
+    function successResponse($message, $data = []) {
+        $response = ["ResponseCode" => "200", "Result" => "true", "ResponseMsg" => $message];
+        if (!empty($data)) {
+            $response = array_merge($data, $response);
+        }
+        echo json_encode($response);
+        exit;
+    }
+}
+
+if (! function_exists('errorResponse')) {
+    function errorResponse($message, $code = "401") {
+        echo json_encode(["ResponseCode" => (string)$code, "Result" => "false", "ResponseMsg" => $message]);
+        exit;
+    }
+}
+
