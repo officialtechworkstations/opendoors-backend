@@ -40,12 +40,33 @@ if (!in_array(strtolower($ext), $allowed)) {
     errorResponse("Invalid video format.", 401);
 }
 
+// Ensure directories exist
+$videos_dir = dirname(dirname(__DIR__)) . '/uploads/reels/videos/';
+$thumbnails_dir = dirname(dirname(__DIR__)) . '/uploads/reels/thumbnails/';
+if (!is_dir($videos_dir)) mkdir($videos_dir, 0777, true);
+if (!is_dir($thumbnails_dir)) mkdir($thumbnails_dir, 0777, true);
+
 $uniq = uniqid();
+
+// Handle optional thumbnail upload
+$thumbnail_path = '';
+if (isset($_FILES['thumbnail']) && $_FILES['thumbnail']['error'] === UPLOAD_ERR_OK) {
+    $thumb_ext = pathinfo($_FILES['thumbnail']['name'], PATHINFO_EXTENSION);
+    $allowed_thumb = ['jpg', 'jpeg', 'png', 'webp'];
+    if (in_array(strtolower($thumb_ext), $allowed_thumb)) {
+        $thumb_filename = 'uploads/reels/thumbnails/thumb_' . $uniq . '.' . $thumb_ext;
+        $abs_thumb = dirname(dirname(__DIR__)) . '/' . $thumb_filename;
+        if (move_uploaded_file($_FILES['thumbnail']['tmp_name'], $abs_thumb)) {
+            $thumbnail_path = $thumb_filename;
+        }
+    }
+}
+
 $ffmpeg_version = @shell_exec('ffmpeg -version 2>&1');
 $has_ffmpeg = ($ffmpeg_version && strpos(strtolower($ffmpeg_version), 'ffmpeg') !== false);
 
 if ($has_ffmpeg) {
-    $temp_filename = 'images/property/temp_reel_' . $uniq . '.' . $ext;
+    $temp_filename = 'uploads/reels/videos/temp_reel_' . $uniq . '.' . $ext;
     $abs_temp = dirname(dirname(__DIR__)) . '/' . $temp_filename;
 
     if (move_uploaded_file($_FILES['video']['tmp_name'], $abs_temp)) {
@@ -57,7 +78,7 @@ if ($has_ffmpeg) {
         if (file_exists($old_thumb) && !empty($reel['thumbnail_path'])) @unlink($old_thumb);
         
         // Update to pending status
-        $sql = "UPDATE tbl_reels SET video_path = '" . $rstate->real_escape_string($temp_filename) . "', thumbnail_path = '', status = 0, updated_at = NOW() WHERE id = " . intval($reel_id);
+        $sql = "UPDATE tbl_reels SET video_path = '" . $rstate->real_escape_string($temp_filename) . "', thumbnail_path = '" . $rstate->real_escape_string($thumbnail_path) . "', status = 0, updated_at = NOW() WHERE id = " . intval($reel_id);
         
         if ($rstate->query($sql)) {
             // Trigger background processing script
@@ -68,18 +89,16 @@ if ($has_ffmpeg) {
             successResponse("Reel updated and processing started.");
         } else {
             unlink($abs_temp);
+            if ($thumbnail_path) unlink(dirname(dirname(__DIR__)) . '/' . $thumbnail_path);
             errorResponse("Database error.", 500);
         }
     } else {
+        if ($thumbnail_path) unlink(dirname(dirname(__DIR__)) . '/' . $thumbnail_path);
         errorResponse("Failed to save uploaded file.", 500);
     }
 } else {
     // Fallback: no ffmpeg, direct upload
-    $upload_dir = dirname(dirname(__DIR__)) . '/uploads/reels/';
-    if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0777, true);
-    }
-    $final_filename = 'uploads/reels/reel_' . $uniq . '.' . $ext;
+    $final_filename = 'uploads/reels/videos/reel_' . $uniq . '.' . $ext;
     $abs_final = dirname(dirname(__DIR__)) . '/' . $final_filename;
 
     if (move_uploaded_file($_FILES['video']['tmp_name'], $abs_final)) {
@@ -89,14 +108,16 @@ if ($has_ffmpeg) {
         if (file_exists($old_video) && !empty($reel['video_path'])) @unlink($old_video);
         if (file_exists($old_thumb) && !empty($reel['thumbnail_path'])) @unlink($old_thumb);
         
-        $sql = "UPDATE tbl_reels SET video_path = '" . $rstate->real_escape_string($final_filename) . "', thumbnail_path = '', status = 1, updated_at = NOW() WHERE id = " . intval($reel_id);
+        $sql = "UPDATE tbl_reels SET video_path = '" . $rstate->real_escape_string($final_filename) . "', thumbnail_path = '" . $rstate->real_escape_string($thumbnail_path) . "', status = 1, updated_at = NOW() WHERE id = " . intval($reel_id);
         if ($rstate->query($sql)) {
             successResponse("Reel updated successfully (no compression).");
         } else {
             unlink($abs_final);
+            if ($thumbnail_path) unlink(dirname(dirname(__DIR__)) . '/' . $thumbnail_path);
             errorResponse("Database error.", 500);
         }
     } else {
+        if ($thumbnail_path) unlink(dirname(dirname(__DIR__)) . '/' . $thumbnail_path);
         errorResponse("Failed to save uploaded file.", 500);
     }
 }

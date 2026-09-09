@@ -21,10 +21,7 @@ if (!$prop || $prop['add_user_id'] != $uid) {
 }
 
 // Check if reel already exists
-$existing = $rstate->query("SELECT id FROM tbl_reels WHERE prop_id = " . intval($prop_id))->fetch_assoc();
-if ($existing) {
-    errorResponse("A reel already exists for this property. Use update instead.", 401);
-}
+$existing = $rstate->query("SELECT * FROM tbl_reels WHERE prop_id = " . intval($prop_id))->fetch_assoc();
 
 if (!isset($_FILES['video']) || $_FILES['video']['error'] !== UPLOAD_ERR_OK) {
     errorResponse("Video file missing or upload error. Make sure to use multipart/form-data.", 401);
@@ -41,52 +38,94 @@ if (!in_array(strtolower($ext), $allowed)) {
     errorResponse("Invalid video format.", 401);
 }
 
+// Ensure directories exist
+$videos_dir = dirname(dirname(__DIR__)) . '/uploads/reels/videos/';
+$thumbnails_dir = dirname(dirname(__DIR__)) . '/uploads/reels/thumbnails/';
+if (!is_dir($videos_dir)) mkdir($videos_dir, 0777, true);
+if (!is_dir($thumbnails_dir)) mkdir($thumbnails_dir, 0777, true);
+
 $uniq = uniqid();
+
+// Handle optional thumbnail upload
+$thumbnail_path = '';
+if (isset($_FILES['thumbnail']) && $_FILES['thumbnail']['error'] === UPLOAD_ERR_OK) {
+    $thumb_ext = pathinfo($_FILES['thumbnail']['name'], PATHINFO_EXTENSION);
+    $allowed_thumb = ['jpg', 'jpeg', 'png', 'webp'];
+    if (in_array(strtolower($thumb_ext), $allowed_thumb)) {
+        $thumb_filename = 'uploads/reels/thumbnails/thumb_' . $uniq . '.' . $thumb_ext;
+        $abs_thumb = dirname(dirname(__DIR__)) . '/' . $thumb_filename;
+        if (move_uploaded_file($_FILES['thumbnail']['tmp_name'], $abs_thumb)) {
+            $thumbnail_path = $thumb_filename;
+        }
+    }
+}
+
 $ffmpeg_version = @shell_exec('ffmpeg -version 2>&1');
 $has_ffmpeg = ($ffmpeg_version && strpos(strtolower($ffmpeg_version), 'ffmpeg') !== false);
 
 if ($has_ffmpeg) {
-    $temp_filename = 'images/property/temp_reel_' . $uniq . '.' . $ext;
+    // Save as temp_reel in videos folder to be processed
+    $temp_filename = 'uploads/reels/videos/temp_reel_' . $uniq . '.' . $ext;
     $abs_temp = dirname(dirname(__DIR__)) . '/' . $temp_filename;
 
     if (move_uploaded_file($_FILES['video']['tmp_name'], $abs_temp)) {
-        // Insert pending status
-        $sql = "INSERT INTO tbl_reels (prop_id, video_path, thumbnail_path, status, created_at, updated_at) VALUES (" . intval($prop_id) . ", '" . $rstate->real_escape_string($temp_filename) . "', '', 0, NOW(), NOW())";
+        if ($existing) {
+            // Delete old files
+            $old_video = dirname(dirname(__DIR__)) . '/' . $existing['video_path'];
+            $old_thumb = dirname(dirname(__DIR__)) . '/' . $existing['thumbnail_path'];
+            if (file_exists($old_video) && !empty($existing['video_path'])) @unlink($old_video);
+            if (file_exists($old_thumb) && !empty($existing['thumbnail_path'])) @unlink($old_thumb);
+            
+            $sql = "UPDATE tbl_reels SET video_path = '" . $rstate->real_escape_string($temp_filename) . "', thumbnail_path = '" . $rstate->real_escape_string($thumbnail_path) . "', status = 0, updated_at = NOW() WHERE id = " . intval($existing['id']);
+        } else {
+            // Insert pending status
+            $sql = "INSERT INTO tbl_reels (prop_id, video_path, thumbnail_path, status, created_at, updated_at) VALUES (" . intval($prop_id) . ", '" . $rstate->real_escape_string($temp_filename) . "', '" . $rstate->real_escape_string($thumbnail_path) . "', 0, NOW(), NOW())";
+        }
         
         if ($rstate->query($sql)) {
-            $reel_id = $rstate->insert_id;
+            $reel_id = $existing ? $existing['id'] : $rstate->insert_id;
             
             // Trigger background processing script using nohup
             $process_script = dirname(__FILE__) . '/process_reel.php';
             $cmd = "nohup php -f " . escapeshellarg($process_script) . " " . intval($reel_id) . " > /dev/null 2>&1 &";
             shell_exec($cmd);
             
-            successResponse("Reel uploaded and processing started.");
+            successResponse($existing ? "Reel updated and processing started." : "Reel uploaded and processing started.");
         } else {
             unlink($abs_temp);
+            if ($thumbnail_path) unlink(dirname(dirname(__DIR__)) . '/' . $thumbnail_path);
             errorResponse("Database error.", 500);
         }
     } else {
+        if ($thumbnail_path) unlink(dirname(dirname(__DIR__)) . '/' . $thumbnail_path);
         errorResponse("Failed to save uploaded file.", 500);
     }
 } else {
     // Fallback: no ffmpeg, direct upload
-    $upload_dir = dirname(dirname(__DIR__)) . '/uploads/reels/';
-    if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0777, true);
-    }
-    $final_filename = 'uploads/reels/reel_' . $uniq . '.' . $ext;
+    $final_filename = 'uploads/reels/videos/reel_' . $uniq . '.' . $ext;
     $abs_final = dirname(dirname(__DIR__)) . '/' . $final_filename;
 
     if (move_uploaded_file($_FILES['video']['tmp_name'], $abs_final)) {
-        $sql = "INSERT INTO tbl_reels (prop_id, video_path, thumbnail_path, status, created_at, updated_at) VALUES (" . intval($prop_id) . ", '" . $rstate->real_escape_string($final_filename) . "', '', 1, NOW(), NOW())";
+        if ($existing) {
+            // Delete old files
+            $old_video = dirname(dirname(__DIR__)) . '/' . $existing['video_path'];
+            $old_thumb = dirname(dirname(__DIR__)) . '/' . $existing['thumbnail_path'];
+            if (file_exists($old_video) && !empty($existing['video_path'])) @unlink($old_video);
+            if (file_exists($old_thumb) && !empty($existing['thumbnail_path'])) @unlink($old_thumb);
+            
+            $sql = "UPDATE tbl_reels SET video_path = '" . $rstate->real_escape_string($final_filename) . "', thumbnail_path = '" . $rstate->real_escape_string($thumbnail_path) . "', status = 1, updated_at = NOW() WHERE id = " . intval($existing['id']);
+        } else {
+            $sql = "INSERT INTO tbl_reels (prop_id, video_path, thumbnail_path, status, created_at, updated_at) VALUES (" . intval($prop_id) . ", '" . $rstate->real_escape_string($final_filename) . "', '" . $rstate->real_escape_string($thumbnail_path) . "', 1, NOW(), NOW())";
+        }
         if ($rstate->query($sql)) {
-            successResponse("Reel uploaded successfully (no compression).");
+            successResponse($existing ? "Reel updated successfully (no compression)." : "Reel uploaded successfully (no compression).");
         } else {
             unlink($abs_final);
+            if ($thumbnail_path) unlink(dirname(dirname(__DIR__)) . '/' . $thumbnail_path);
             errorResponse("Database error.", 500);
         }
     } else {
+        if ($thumbnail_path) unlink(dirname(dirname(__DIR__)) . '/' . $thumbnail_path);
         errorResponse("Failed to save uploaded file.", 500);
     }
 }

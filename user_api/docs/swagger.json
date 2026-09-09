@@ -14,8 +14,8 @@
   "paths": {
     "/reels/create.php": {
       "post": {
-        "summary": "Create a new Reel",
-        "description": "Upload a new video reel for a property. Rejects if a reel already exists.",
+        "summary": "Create or Update a Reel",
+        "description": "Upload a new video reel for a property. If a reel already exists for the property, it replaces the existing one.",
         "tags": ["Reels"],
         "requestBody": {
           "required": true,
@@ -26,7 +26,8 @@
                 "properties": {
                   "uid": { "type": "string", "example": "1" },
                   "prop_id": { "type": "string", "example": "42" },
-                  "video": { "type": "string", "format": "binary", "description": "Max 300MB. Formats: mp4, mov, avi, mkv, webm." }
+                  "video": { "type": "string", "format": "binary", "description": "Max 300MB. Formats: mp4, mov, avi, mkv, webm." },
+                  "thumbnail": { "type": "string", "format": "binary", "description": "Optional. Automatically generated if omitted." }
                 }
               }
             }
@@ -41,18 +42,6 @@
                   "ResponseCode": "200",
                   "Result": "true",
                   "ResponseMsg": "Reel uploaded and processing started."
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "example": {
-                  "ResponseCode": "401",
-                  "Result": "false",
-                  "ResponseMsg": "A reel already exists for this property. Use update instead."
                 }
               }
             }
@@ -74,7 +63,8 @@
                 "properties": {
                   "uid": { "type": "string", "example": "1" },
                   "reel_id": { "type": "string", "example": "15" },
-                  "video": { "type": "string", "format": "binary" }
+                  "video": { "type": "string", "format": "binary", "description": "Max 300MB. Formats: mp4, mov, avi, mkv, webm." },
+                  "thumbnail": { "type": "string", "format": "binary", "description": "Optional. Automatically generated if omitted." }
                 }
               }
             }

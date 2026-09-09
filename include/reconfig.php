@@ -27,9 +27,12 @@ try {
     //Should be a message a typical user could understand
 }
 
-$set = $rstate->query("SELECT * FROM `tbl_setting` LIMIT 1")
-    ->fetch_assoc();
-date_default_timezone_set($set['timezone']);
+$set = $rstate->query("SELECT * FROM `tbl_setting` LIMIT 1")->fetch_assoc();
+if ($set && !empty($set['timezone'])) {
+    date_default_timezone_set($set['timezone']);
+} else {
+    date_default_timezone_set('UTC');
+}
 
 $main = $rstate->query("SELECT * FROM `tbl_prop` LIMIT 1")->fetch_assoc();
 
