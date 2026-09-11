@@ -118,7 +118,7 @@ if ($has_ffmpeg) {
             $sql = "INSERT INTO tbl_reels (prop_id, video_path, thumbnail_path, status, created_at, updated_at) VALUES (" . intval($prop_id) . ", '" . $rstate->real_escape_string($final_filename) . "', '" . $rstate->real_escape_string($thumbnail_path) . "', 1, NOW(), NOW())";
         }
         if ($rstate->query($sql)) {
-            successResponse($existing ? "Reel updated successfully (no compression)." : "Reel uploaded successfully (no compression).");
+            successResponse($existing ? "Reel updated successfully ." : "Reel uploaded successfully .");
         } else {
             unlink($abs_final);
             if ($thumbnail_path) unlink(dirname(dirname(__DIR__)) . '/' . $thumbnail_path);

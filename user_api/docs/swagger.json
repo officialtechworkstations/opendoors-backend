@@ -35,14 +35,43 @@
         },
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "Created — new reel",
             "content": {
               "application/json": {
-                "example": {
-                  "ResponseCode": "200",
-                  "Result": "true",
-                  "ResponseMsg": "Reel uploaded and processing started."
+                "examples": {
+                  "created_ffmpeg": {
+                    "summary": "New reel (ffmpeg available)",
+                    "value": { "ResponseCode": "200", "Result": "true", "ResponseMsg": "Reel uploaded and processing started." }
+                  },
+                  "created_no_ffmpeg": {
+                    "summary": "New reel (no ffmpeg — direct upload)",
+                    "value": { "ResponseCode": "200", "Result": "true", "ResponseMsg": "Reel uploaded successfully ." }
+                  },
+                  "replaced_ffmpeg": {
+                    "summary": "Existing reel replaced (ffmpeg available)",
+                    "value": { "ResponseCode": "200", "Result": "true", "ResponseMsg": "Reel updated and processing started." }
+                  },
+                  "replaced_no_ffmpeg": {
+                    "summary": "Existing reel replaced (no ffmpeg)",
+                    "value": { "ResponseCode": "200", "Result": "true", "ResponseMsg": "Reel updated successfully ." }
+                  }
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "Validation / authorisation error",
+            "content": {
+              "application/json": {
+                "example": { "ResponseCode": "401", "Result": "false", "ResponseMsg": "Property not found or access denied." }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "example": { "ResponseCode": "500", "Result": "false", "ResponseMsg": "Database error." }
               }
             }
           }
@@ -51,8 +80,8 @@
     },
     "/reels/update.php": {
       "post": {
-        "summary": "Update an existing Reel",
-        "description": "Replace the video of an existing reel.",
+        "summary": "Update an existing Reel by reel_id",
+        "description": "Replace the video (and optionally thumbnail) of an existing reel. Old files are deleted from disk. The old thumbnail is preserved if a new one is not supplied.",
         "tags": ["Reels"],
         "requestBody": {
           "required": true,
@@ -60,11 +89,12 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
+                "required": ["uid", "reel_id", "video"],
                 "properties": {
                   "uid": { "type": "string", "example": "1" },
-                  "reel_id": { "type": "string", "example": "15" },
+                  "reel_id": { "type": "string", "example": "15", "description": "ID of the reel to update." },
                   "video": { "type": "string", "format": "binary", "description": "Max 300MB. Formats: mp4, mov, avi, mkv, webm." },
-                  "thumbnail": { "type": "string", "format": "binary", "description": "Optional. Automatically generated if omitted." }
+                  "thumbnail": { "type": "string", "format": "binary", "description": "Optional. If omitted, the thumbnail is auto-generated from the new video via ffmpeg (or the old thumbnail is cleared if ffmpeg is unavailable)." }
                 }
               }
             }
@@ -75,11 +105,32 @@
             "description": "Success",
             "content": {
               "application/json": {
-                "example": {
-                  "ResponseCode": "200",
-                  "Result": "true",
-                  "ResponseMsg": "Reel updated and processing started."
+                "examples": {
+                  "with_ffmpeg": {
+                    "summary": "ffmpeg available — processing in background",
+                    "value": { "ResponseCode": "200", "Result": "true", "ResponseMsg": "Reel updated and processing started." }
+                  },
+                  "no_ffmpeg": {
+                    "summary": "No ffmpeg — direct upload",
+                    "value": { "ResponseCode": "200", "Result": "true", "ResponseMsg": "Reel updated successfully ." }
+                  }
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "Validation / authorisation error",
+            "content": {
+              "application/json": {
+                "example": { "ResponseCode": "401", "Result": "false", "ResponseMsg": "Reel not found." }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "example": { "ResponseCode": "500", "Result": "false", "ResponseMsg": "Database error." }
               }
             }
           }
@@ -152,7 +203,7 @@
                     {
                       "reel_id": "15",
                       "prop_id": "42",
-                      "thumbnail_path": "images/property/temp_reel_abc.png",
+                      "thumbnail_path": "uploads/reels/thumbnails/thumb_6abc123.png",
                       "property_title": "Cozy Apartment",
                       "property_address": "123 Main St",
                       "property_image": "prop_image.jpg"
@@ -196,8 +247,8 @@
                   "reel": {
                     "reel_id": "15",
                     "prop_id": "42",
-                    "video_path": "images/property/temp_reel_abc.mp4",
-                    "thumbnail_path": "images/property/temp_reel_abc.png",
+                    "video_path": "uploads/reels/videos/reel_6abc123.mp4",
+                    "thumbnail_path": "uploads/reels/thumbnails/thumb_6abc123.png",
                     "reel_status": "1",
                     "property_title": "Cozy Apartment",
                     "property_address": "123 Main St",

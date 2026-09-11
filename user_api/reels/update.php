@@ -110,7 +110,7 @@ if ($has_ffmpeg) {
         
         $sql = "UPDATE tbl_reels SET video_path = '" . $rstate->real_escape_string($final_filename) . "', thumbnail_path = '" . $rstate->real_escape_string($thumbnail_path) . "', status = 1, updated_at = NOW() WHERE id = " . intval($reel_id);
         if ($rstate->query($sql)) {
-            successResponse("Reel updated successfully (no compression).");
+            successResponse("Reel updated successfully .");
         } else {
             unlink($abs_final);
             if ($thumbnail_path) unlink(dirname(dirname(__DIR__)) . '/' . $thumbnail_path);
