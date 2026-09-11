@@ -17,3 +17,6 @@ error_log
 .kortex/
 
 analysis.md
+PROJECT_STRUCTURE.md
+prd.md
+run_migrations.php
