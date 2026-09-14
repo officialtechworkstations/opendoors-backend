@@ -1,0 +1,21 @@
+-- Allow NULL before processing completes (status 0 = queued, video not yet transcoded)
+ALTER TABLE tbl_reels
+    MODIFY video_path TEXT NULL,
+    MODIFY thumbnail_path TEXT NULL;
+
+-- Status: 0 = queued/processing, 1 = ready, 2 = failed
+ALTER TABLE tbl_reels
+    MODIFY status INT NOT NULL DEFAULT 0;
+
+-- Version counter — background worker compares this before writing results
+-- to prevent a stale job overwriting a newer upload
+ALTER TABLE tbl_reels
+    ADD COLUMN processing_version INT NOT NULL DEFAULT 0 AFTER status;
+
+-- Human-readable failure reason exposed to the property owner
+ALTER TABLE tbl_reels
+    ADD COLUMN processing_error TEXT NULL AFTER processing_version;
+
+-- Enforce one active reel per property at the database level
+ALTER TABLE tbl_reels
+    ADD UNIQUE KEY unique_prop_id (prop_id);

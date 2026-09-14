@@ -1,0 +1,13 @@
+-- Stores issued JWT hashes for optional revocation checking.
+-- Tokens are short-lived (default 15 min); this table enables logout / forced invalidation.
+CREATE TABLE tbl_auth_tokens (
+    id          INT(11)      NOT NULL AUTO_INCREMENT,
+    uid         INT(11)      NOT NULL,
+    token_hash  VARCHAR(64)  NOT NULL,   -- SHA-256 hex of the raw JWT string
+    expires_at  DATETIME     NOT NULL,
+    created_at  DATETIME     NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY  idx_token_hash (token_hash),
+    KEY         idx_uid        (uid),
+    KEY         idx_expires    (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

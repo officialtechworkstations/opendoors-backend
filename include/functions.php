@@ -311,6 +311,7 @@ if (! function_exists('oneSignalNewsLetterSubscription')) {
 
 if (! function_exists('successResponse')) {
     function successResponse($message, $data = []) {
+        http_response_code(200);
         $response = ["ResponseCode" => "200", "Result" => "true", "ResponseMsg" => $message];
         if (!empty($data)) {
             $response = array_merge($data, $response);
@@ -321,8 +322,24 @@ if (! function_exists('successResponse')) {
 }
 
 if (! function_exists('errorResponse')) {
-    function errorResponse($message, $code = "401") {
-        echo json_encode(["ResponseCode" => (string)$code, "Result" => "false", "ResponseMsg" => $message]);
+    /**
+     * Emit a JSON error response and exit.
+     *
+     * @param string     $message    Human-readable message (may change; do not parse)
+     * @param int|string $code       HTTP status code (also used as ResponseCode)
+     * @param string     $error_code Machine-readable error code (e.g. REEL_FILE_TOO_LARGE)
+     */
+    function errorResponse($message, $code = 401, string $error_code = '') {
+        http_response_code((int)$code);
+        $response = [
+            "ResponseCode" => (string)$code,
+            "Result"       => "false",
+            "ResponseMsg"  => $message,
+        ];
+        if ($error_code !== '') {
+            $response['error_code'] = $error_code;
+        }
+        echo json_encode($response);
         exit;
     }
 }

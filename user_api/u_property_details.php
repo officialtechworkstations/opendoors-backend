@@ -103,9 +103,28 @@ if ($pro_id == '' or $uid == '') {
 	}
 
     $reel_data = null;
-    $reel_q = $rstate->query("SELECT id, video_path, thumbnail_path, status FROM tbl_reels WHERE prop_id=" . $sel['id'] . " AND status = 1 LIMIT 1");
+    $is_owner   = ((int)$sel['add_user_id'] === (int)$uid);
+
+    if ($is_owner) {
+        // Property owner sees the reel at any processing status
+        $reel_q = $rstate->query(
+            "SELECT id, prop_id, video_path, thumbnail_path, status, processing_error
+             FROM tbl_reels
+             WHERE prop_id = " . intval($sel['id']) . "
+             LIMIT 1"
+        );
+    } else {
+        // Public users only see ready reels
+        $reel_q = $rstate->query(
+            "SELECT id, prop_id, video_path, thumbnail_path, status, processing_error
+             FROM tbl_reels
+             WHERE prop_id = " . intval($sel['id']) . " AND status = 1
+             LIMIT 1"
+        );
+    }
+
     if ($reel_q && $reel_q->num_rows > 0) {
-        $reel_data = $reel_q->fetch_assoc();
+        $reel_data = reelToArray($reel_q->fetch_assoc());
     }
     $fp['reel'] = $reel_data;
 

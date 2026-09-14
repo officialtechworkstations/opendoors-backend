@@ -9,6 +9,7 @@ if (! $isApiRequest && session_status() == PHP_SESSION_NONE) {
 }
 
 require_once ('functions.php');
+require_once ('utils.php');
 
 $db_server = getConfig('DB_SERVER');
 $db_user = getConfig('DB_USER');

@@ -1,40 +1,61 @@
 <?php
+/**
+ * user_api/reels/delete.php
+ *
+ * POST /user_api/reels/delete.php
+ *
+ * Delete a reel and all its associated media files.
+ * After the DB record is deleted, any in-flight process_reel.php worker will
+ * detect the missing record (or version mismatch) and abort without writing.
+ *
+ * Auth: Bearer token (preferred) or legacy uid body param (transition).
+ *
+ * Request body (JSON or form):
+ *   uid      string  (legacy)
+ *   reel_id  int     Required
+ */
 require dirname(dirname(__DIR__)) . '/include/reconfig.php';
-header('Content-type: text/json');
+require dirname(dirname(__DIR__)) . '/include/auth.php';
+
+header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    errorResponse("Method Not Allowed. Expected POST.", 405);
+    errorResponse('Method Not Allowed. Expected POST.', 405);
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
-$uid = $data['uid'] ?? ($_POST['uid'] ?? '');
-$reel_id = $data['reel_id'] ?? ($_POST['reel_id'] ?? '');
+// --- Authentication ----------------------------------------------------------
+$data       = json_decode(file_get_contents('php://input'), true) ?? [];
+$legacy_uid = $data['uid'] ?? ($_POST['uid'] ?? null);
+$auth_uid   = requireAuth($legacy_uid);
 
-if (empty($uid) || empty($reel_id)) {
-    errorResponse("Missing required parameters.", 401);
+// --- Input validation --------------------------------------------------------
+$reel_id = intval($data['reel_id'] ?? ($_POST['reel_id'] ?? 0));
+if ($reel_id <= 0) {
+    errorResponse('Missing or invalid reel_id.', 400, 'REEL_MISSING_ID');
 }
 
-$reel = $rstate->query("SELECT * FROM tbl_reels WHERE id = " . intval($reel_id))->fetch_assoc();
-if (!$reel) {
-    errorResponse("Reel not found.", 401);
+// --- Fetch reel --------------------------------------------------------------
+$reel = $rstate->query("SELECT * FROM tbl_reels WHERE id = " . $reel_id)->fetch_assoc();
+if (! $reel) {
+    errorResponse('Reel not found.', 404, 'REEL_NOT_FOUND');
 }
 
-// Verify property ownership
-$prop = $rstate->query("SELECT id, add_user_id FROM tbl_property WHERE id = " . intval($reel['prop_id']))->fetch_assoc();
-if (!$prop || $prop['add_user_id'] != $uid) {
-    errorResponse("Property not found or access denied.", 401);
+// --- Ownership check ---------------------------------------------------------
+$prop = $rstate->query(
+    "SELECT id, add_user_id FROM tbl_property WHERE id = " . intval($reel['prop_id'])
+)->fetch_assoc();
+
+if (! $prop || (int)$prop['add_user_id'] !== $auth_uid) {
+    errorResponse('You do not have permission to delete this reel.', 403, 'REEL_ACCESS_DENIED');
 }
 
-// Delete old files
-$old_video = dirname(dirname(__DIR__)) . '/' . $reel['video_path'];
-$old_thumb = dirname(dirname(__DIR__)) . '/' . $reel['thumbnail_path'];
-if (file_exists($old_video) && !empty($reel['video_path'])) @unlink($old_video);
-if (file_exists($old_thumb) && !empty($reel['thumbnail_path'])) @unlink($old_thumb);
-
-$sql = "DELETE FROM tbl_reels WHERE id = " . intval($reel_id);
-if ($rstate->query($sql)) {
-    successResponse("Reel deleted successfully.");
-} else {
-    errorResponse("Database error.", 500);
+// --- Delete DB record first (worker checks existence before writing) ----------
+if (! $rstate->query("DELETE FROM tbl_reels WHERE id = " . $reel_id)) {
+    errorResponse('Database error while deleting reel.', 500);
 }
+
+// --- Delete media files (safe — @unlink, file_exists checked inside) ---------
+deleteReelFiles($reel);
+
+successResponse('Reel deleted successfully.');
