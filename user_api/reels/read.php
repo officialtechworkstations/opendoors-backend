@@ -97,6 +97,14 @@ if (! $is_owner && $status !== 1) {
 
 // Build response — reelToArray handles processing_error inclusion for status=2
 $reel = reelToArray($row);
+$reel['property'] = [
+    'title'     => $row['property_title'] ?? '',
+    'address'   => $row['property_address'] ?? '',
+    'image_url' => absoluteMediaUrl($row['property_image'] ?? ''),
+    'price'     => $row['property_price'] ?? '',
+    'beds'      => $row['beds'] ?? '',
+    'bathroom'  => $row['bathroom'] ?? '',
+];
 
 // Remove internal add_user_id from output
 unset($reel['add_user_id']);

@@ -1,5 +1,6 @@
 <?php
 require dirname(dirname(__FILE__)) . '/include/reconfig.php';
+require dirname(dirname(__FILE__)) . '/include/auth.php';
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -23,8 +24,12 @@ if ($data['mobile'] == '' or $data['password'] == '' or $data['ccode'] == '') {
     if ($chek_user->num_rows != 0 && password_verify($password, $chek_user->fetch_assoc()['password'])) {
         $c = $rstate->query("SELECT * FROM tbl_user WHERE (mobile='" . $mobile . "' OR email='" . $mobile . "') AND ccode='" . $ccode . "' AND status = 1")->fetch_assoc();
 
+        $tokenData = issueToken((int)$c['id']);
+
         $returnArr = [
             "UserLogin"    => $c,
+            "access_token" => $tokenData['token'],
+            "expires_in"   => $tokenData['expires_in'],
             "currency"     => $set['currency'],
             "ResponseCode" => "200",
             "Result"       => "true",

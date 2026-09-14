@@ -70,7 +70,16 @@ $min_id = PHP_INT_MAX;
 
 if ($sel && $sel->num_rows > 0) {
     while ($row = $sel->fetch_assoc()) {
-        $reels[] = reelToArray($row);
+        $reel = reelToArray($row);
+        $reel['property'] = [
+            'title'     => $row['property_title'] ?? '',
+            'address'   => $row['property_address'] ?? '',
+            'image_url' => absoluteMediaUrl($row['property_image'] ?? ''),
+            'price'     => $row['property_price'] ?? '',
+            'beds'      => $row['beds'] ?? '',
+            'bathroom'  => $row['bathroom'] ?? '',
+        ];
+        $reels[] = $reel;
         if ((int)$row['id'] < $min_id) {
             $min_id = (int)$row['id'];
         }
