@@ -36,7 +36,12 @@ if (! function_exists('absoluteMediaUrl')) {
             return null;
         }
 
-        $base = rtrim(getConfig('APP_URL'), '/');
+        $base = rtrim(getConfig('APP_URL') ?? '', '/');
+        if (empty($base)) {
+            $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'admin.opendoorsapp.com';
+            $base = $protocol . '://' . $host;
+        }
         return $base . '/' . ltrim($path, '/');
     }
 }

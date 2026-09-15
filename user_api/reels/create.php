@@ -59,6 +59,9 @@ if ((int)$prop['add_user_id'] !== $auth_uid) {
 if (! isset($_FILES['video'])) {
     errorResponse('Video file is required. Use multipart/form-data.', 400, 'REEL_MISSING_VIDEO');
 }
+if (! isset($_FILES['thumbnail'])) {
+    errorResponse('Thumbnail file is required. Use multipart/form-data.', 400, 'REEL_MISSING_THUMBNAIL');
+}
 validateVideoFile($_FILES['video']);
 
 // --- Save temp file so ffprobe can inspect it --------------------------------
@@ -77,9 +80,10 @@ if (! move_uploaded_file($_FILES['video']['tmp_name'], $tempAbs)) {
 }
 
 // --- Duration + resolution guards (ffprobe, graceful degradation) ------------
-$probe = probeVideo($tempAbs);
-assertVideoDuration($probe, 90);
-assertVideoResolution($probe, 1080);
+// Disabled for direct upload as we are bypassing ffmpeg
+// $probe = probeVideo($tempAbs);
+// assertVideoDuration($probe, 90);
+// assertVideoResolution($probe, 1080);
 
 // --- Optional thumbnail -------------------------------------------------------
 $thumbnail_path = '';
@@ -88,8 +92,9 @@ if (isset($_FILES['thumbnail'])) {
 }
 
 // --- Fetch ffmpeg availability ------------------------------------------------
-$ffmpeg_output = @shell_exec('ffmpeg -version 2>&1');
-$has_ffmpeg    = (bool)($ffmpeg_output && stripos($ffmpeg_output, 'ffmpeg') !== false);
+// $ffmpeg_output = @shell_exec('ffmpeg -version 2>&1');
+// $has_ffmpeg    = (bool)($ffmpeg_output && stripos($ffmpeg_output, 'ffmpeg') !== false);
+$has_ffmpeg = false; // Force direct upload path
 
 // --- Check for existing reel (upsert) ----------------------------------------
 $existing = $rstate->query("SELECT * FROM tbl_reels WHERE prop_id = " . $prop_id)->fetch_assoc();
