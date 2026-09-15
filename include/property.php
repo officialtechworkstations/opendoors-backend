@@ -1,5 +1,5 @@
 <?php
-require "reconfig.php";
+require_once "reconfig.php";
 require "estate.php";
 
 if (isset($_POST["type"])) {
@@ -1519,6 +1519,33 @@ if (isset($_POST["type"])) {
                     "Result" => "true",
                     "title" => "Property Selled Successfully!!",
                     "message" => "User section!",
+                    "action" => "list_properties.php",
+                ];
+            }
+        } elseif ($coll_type == "delete_reel") {
+            $table = "tbl_reels";
+            $where = "where id=" . $id . "";
+            
+            // Delete physical files first
+            $reel_q = $rstate->query("SELECT video_path, thumbnail_path FROM tbl_reels WHERE id=" . $id);
+            if ($reel_q && $reel_q->num_rows > 0) {
+                $reel_data = $reel_q->fetch_assoc();
+                if (!empty($reel_data['video_path']) && file_exists("../" . $reel_data['video_path'])) {
+                    unlink("../" . $reel_data['video_path']);
+                }
+                if (!empty($reel_data['thumbnail_path']) && file_exists("../" . $reel_data['thumbnail_path'])) {
+                    unlink("../" . $reel_data['thumbnail_path']);
+                }
+            }
+            
+            $h = new Estate();
+            $check = $h->restateDeleteData($where, $table);
+            if ($check == 1) {
+                $returnArr = [
+                    "ResponseCode" => "200",
+                    "Result" => "true",
+                    "title" => "Reel Removed Successfully!!",
+                    "message" => "Property section!",
                     "action" => "list_properties.php",
                 ];
             }

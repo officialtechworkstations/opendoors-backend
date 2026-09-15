@@ -57,6 +57,7 @@
 												<th>Property Rent or Buy?</th>
 												<th>Person Limit?</th>
 												<th>Property Status</th>
+												<th>Reel</th>
 												<?php if($_SESSION['stype'] == 'Staff') { ?>
 													<?php if (in_array('Update', $property_per)) { ?>
 														<th>Action</th>
@@ -67,7 +68,7 @@
 											</tr>
 										</thead>
 										<tbody>
-											<?php $city = $rstate->query("SELECT tbl_property.*,(SELECT GROUP_CONCAT(`title`) from `tbl_facility` WHERE find_in_set(tbl_facility.id,tbl_property.facility)) as facility_select FROM tbl_property"); ?>
+											<?php $city = $rstate->query("SELECT tbl_property.*, rl.id AS reel_id, rl.video_path AS reel_video, rl.status AS reel_status, (SELECT GROUP_CONCAT(`title`) from `tbl_facility` WHERE find_in_set(tbl_facility.id,tbl_property.facility)) as facility_select FROM tbl_property LEFT JOIN tbl_reels rl ON rl.prop_id = tbl_property.id"); ?>
 											<?php $i=0; ?>
 											<?php while($row = $city->fetch_assoc()) { $i = $i + 1; ?>
 												<tr>
@@ -130,6 +131,14 @@
 														<span class="badge badge-danger">Unpublish</span>
 													</td>
 													<?php } ?>
+													<td class="align-middle">
+														<?php if (!empty($row['reel_id'])) { ?>
+															<a href="#" class="btn btn-sm btn-primary view-reel-btn mb-1" data-video="<?php echo $row['reel_video']; ?>">View</a><br>
+															<a href="#" data-id="<?php echo $row['reel_id']; ?>" class="drop badge badge-danger cursor-pointer p-2" data-status="0" data-type="update_status" coll-type="delete_reel">Remove</a>
+														<?php } else { ?>
+															N/A
+														<?php } ?>
+													</td>
 													<?php 
 														if($_SESSION['stype'] == 'Staff')
 														{
@@ -201,5 +210,47 @@
 <?php 
 	require 'include/footer.php';
 	?>
+<!-- Reel Modal -->
+<div class="modal fade" id="reelModal" tabindex="-1" role="dialog" aria-labelledby="reelModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reelModalLabel">Property Reel</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center">
+        <video id="reelVideoPlayer" width="100%" style="max-height: 70vh;" controls controlsList="nodownload">
+            <source src="" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('.view-reel-btn').on('click', function(e) {
+        e.preventDefault();
+        var videoUrl = $(this).data('video');
+        $('#reelVideoPlayer source').attr('src', videoUrl);
+        $('#reelVideoPlayer')[0].load();
+        var playPromise = $('#reelVideoPlayer')[0].play();
+        if (playPromise !== undefined) {
+            playPromise.catch(function(error) {
+                // Auto-play was prevented
+            });
+        }
+        $('#reelModal').modal('show');
+    });
+
+    $('#reelModal').on('hidden.bs.modal', function () {
+        $('#reelVideoPlayer')[0].pause();
+        $('#reelVideoPlayer source').attr('src', '');
+    });
+});
+</script>
 </body>
 </html>

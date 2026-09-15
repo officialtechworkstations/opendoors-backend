@@ -1,5 +1,5 @@
 <?php
-require 'reconfig.php';
+require_once 'reconfig.php';
 $GLOBALS['rstate'] = $rstate;
 class Estate
 {
@@ -151,6 +151,12 @@ class Estate
         $result = $GLOBALS['rstate']->query($sql);
         return $result;
     }
+
+    function restateDeleteData($where, $table)
+    {
+        return $this->restaterestateDeleteData($where, $table);
+    }
+
 
     function restateDeleteData_Api($where, $table)
     {
