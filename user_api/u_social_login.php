@@ -10,6 +10,7 @@
  */
 require dirname(dirname(__FILE__)) . '/include/reconfig.php';
 require dirname(dirname(__FILE__)) . '/include/estate.php';
+require dirname(dirname(__FILE__)) . '/include/auth.php';
 header('Content-type: text/json');
 
 $data     = json_decode(file_get_contents('php://input'), true);
@@ -70,8 +71,12 @@ if (! $user) {
     exit;
 }
 
+$tokenData = issueToken((int)$user['id']);
+
 echo json_encode([
     "UserLogin"    => $user,
+    "access_token" => $tokenData['token'],
+    "expires_in"   => $tokenData['expires_in'],
     "currency"     => $set['currency'],
     "ResponseCode" => "200",
     "Result"       => "true",

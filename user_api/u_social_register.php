@@ -13,6 +13,7 @@
  */
 require dirname(dirname(__FILE__)) . '/include/reconfig.php';
 require dirname(dirname(__FILE__)) . '/include/estate.php';
+require dirname(dirname(__FILE__)) . '/include/auth.php';
 header('Content-type: text/json');
 
 $data = json_decode(file_get_contents('php://input'), true);
@@ -78,8 +79,11 @@ if ($existing) {
         );
     }
     $c = $rstate->query("SELECT * FROM tbl_user WHERE id=" . (int) $existing['id'])->fetch_assoc();
+    $tokenData = issueToken((int)$existing['id']);
     echo json_encode([
         "UserLogin"    => $c,
+        "access_token" => $tokenData['token'],
+        "expires_in"   => $tokenData['expires_in'],
         "currency"     => $set['currency'],
         "ResponseCode" => "200",
         "Result"       => "true",
@@ -169,8 +173,12 @@ if ($accept_newsletter == 1) {
     oneSignalNewsLetterSubscription($uid, true, ['email' => $email_plain]);
 }
 
+$tokenData = issueToken((int)$uid);
+
 echo json_encode([
     "UserLogin"    => $c,
+    "access_token" => $tokenData['token'],
+    "expires_in"   => $tokenData['expires_in'],
     "currency"     => $set['currency'],
     "ResponseCode" => "200",
     "Result"       => "true",

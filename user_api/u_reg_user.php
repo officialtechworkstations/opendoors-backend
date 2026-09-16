@@ -1,6 +1,7 @@
 <?php
 require dirname(dirname(__FILE__)) . '/include/reconfig.php';
 require dirname(dirname(__FILE__)) . '/include/estate.php';
+require dirname(dirname(__FILE__)) . '/include/auth.php';
 header('Content-type: text/json');
 $data = json_decode(file_get_contents('php://input'), true);
 function generate_random()
@@ -117,9 +118,12 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
                 if ($accept_newsletter == 1) {
                     oneSignalNewsLetterSubscription($check, true, ['email' => trim($email)]);
                 }
+                $tokenData = issueToken((int)$c['id']);
                 
                 $returnArr = array(
                     "UserLogin" => $c,
+                    "access_token" => $tokenData['token'],
+                    "expires_in" => $tokenData['expires_in'],
                     "ResponseCode" => "200",
                     "Result" => "true",
                     "ResponseMsg" => "Sign Up Done Successfully!"
@@ -167,9 +171,12 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
             if ($accept_newsletter == 1) {
                 oneSignalNewsLetterSubscription($check, true, ['email' => trim($email)]);
             }
+            $tokenData = issueToken((int)$c['id']);
             
             $returnArr    = array(
                 "UserLogin" => $c,
+                "access_token" => $tokenData['token'],
+                "expires_in" => $tokenData['expires_in'],
                 "ResponseCode" => "200",
                 "Result" => "true",
                 "ResponseMsg" => "Sign Up Done Successfully!"
