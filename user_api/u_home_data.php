@@ -59,6 +59,18 @@ if ($data['uid'] == '' or $data['country_id'] == '') {
         $cat[]         = $vop;
     }
     array_unshift($cat, $wo);
+    $additional_query = '';
+    $facility = isset($data['facility']) ? $data['facility'] : [];
+    if (is_array($facility)) {
+        foreach ($facility as $value) {
+            if ($value) {
+                $additional_query .= ' AND FIND_IN_SET(' . ($value) . ', p.facility) > 0';
+            }
+        }
+    } elseif (is_string($facility) && $facility) {
+        $additional_query .= ' AND FIND_IN_SET(' . ($facility) . ', p.facility) > 0';
+    }
+
     $propertySelect = "SELECT p.*,
 					COALESCE(ROUND(r.avg_rate, 0), p.rate) AS effective_rate,
 					CASE WHEN f.property_id IS NULL THEN 0 ELSE 1 END AS is_favourite
@@ -76,7 +88,7 @@ if ($data['uid'] == '' or $data['country_id'] == '') {
 					) f ON f.property_id = p.id
 					WHERE p.country_id=" . intval($country_id) . " 
 						AND p.status = 1 
-						AND p.is_sell = 0";
+						AND p.is_sell = 0" . $additional_query;
     $ownerFilter = ($uid == 0) ? "" : " AND p.add_user_id!=" . intval($uid);
     $prop        = $rstate->query($propertySelect . $ownerFilter . " AND p.is_featured=1 ORDER BY p.id DESC LIMIT 5");
     while ($row = $prop->fetch_assoc()) {

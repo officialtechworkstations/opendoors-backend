@@ -4,6 +4,19 @@ require dirname( dirname(__FILE__) ).'/include/reconfig.php';
 header('Content-type: text/json');
 $data = json_decode(file_get_contents('php://input'), true);
 $uid = $data['uid'];
+$facility = isset($data['facility']) ? $data['facility'] : [];
+
+$additional_query = '';
+if (is_array($facility)) {
+    foreach ($facility as $value) {
+        if ($value) {
+            $additional_query .= ' AND FIND_IN_SET(' . ($value) . ', tbl_property.facility) > 0';
+        }
+    }
+} elseif (is_string($facility) && $facility) {
+    $additional_query .= ' AND FIND_IN_SET(' . ($facility) . ', tbl_property.facility) > 0';
+}
+
 if ($uid == '') {
     $returnArr = array(
         "ResponseCode" => "401",
@@ -28,7 +41,7 @@ $sel = $rstate->query("SELECT tbl_property.*, c.title AS property_type_title,
 			WHERE book_status='Completed' AND total_rate != 0
 			GROUP BY prop_id
 		) r ON r.prop_id = tbl_property.id
-		WHERE tbl_property.add_user_id = ".$uid."
+		WHERE tbl_property.add_user_id = ".$uid." " . $additional_query . "
 	ORDER BY tbl_property.is_featured DESC, tbl_property.rate DESC, tbl_property.price DESC");
 while($row = $sel->fetch_assoc()) {
 		$pol['id'] = $row['id'];

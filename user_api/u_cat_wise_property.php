@@ -16,26 +16,37 @@ if ($data['uid'] == '' or $data['cid'] == '' or $data['country_id'] == '') {
 	$uid = $data['uid'];
 	$fpv = array();
 	$fps = array();
+	$additional_query = '';
+	$facility = isset($data['facility']) ? $data['facility'] : [];
+	if (is_array($facility)) {
+		foreach ($facility as $value) {
+			if ($value) {
+				$additional_query .= ' AND FIND_IN_SET(' . ($value) . ', tbl_property.facility) > 0';
+			}
+		}
+	} elseif (is_string($facility) && $facility) {
+		$additional_query .= ' AND FIND_IN_SET(' . ($facility) . ', tbl_property.facility) > 0';
+	}
 	if($uid == 0)
 	{
 		if($cid == 0)
 	{
-		$props = $rstate->query("select * from tbl_property where country_id=".$country_id."");
+		$props = $rstate->query("select * from tbl_property where country_id=".$country_id."".$additional_query);
 	}
 	else 
 	{
-	$props = $rstate->query("select * from tbl_property where ptype=".$cid." and country_id=".$country_id."");
+	$props = $rstate->query("select * from tbl_property where ptype=".$cid." and country_id=".$country_id."".$additional_query);
 	}
 	}
 	else 
 	{
 	if($cid == 0)
 	{
-		$props = $rstate->query("select * from tbl_property where country_id=".$country_id." and add_user_id!=".$uid."");
+		$props = $rstate->query("select * from tbl_property where country_id=".$country_id." and add_user_id!=".$uid."".$additional_query);
 	}
 	else 
 	{
-	$props = $rstate->query("select * from tbl_property where ptype=".$cid." and country_id=".$country_id." and add_user_id!=".$uid."");
+	$props = $rstate->query("select * from tbl_property where ptype=".$cid." and country_id=".$country_id." and add_user_id!=".$uid."".$additional_query);
 	}
 	}
 	while($rows = $props->fetch_assoc())
