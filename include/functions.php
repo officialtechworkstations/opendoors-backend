@@ -310,6 +310,9 @@ if (! function_exists('oneSignalNewsLetterSubscription')) {
 }
 
 if (! function_exists('successResponse')) {
+    /**
+     * @return never
+     */
     function successResponse($message, $data = []) {
         http_response_code(200);
         $response = ["ResponseCode" => "200", "Result" => "true", "ResponseMsg" => $message];
@@ -328,6 +331,7 @@ if (! function_exists('errorResponse')) {
      * @param string     $message    Human-readable message (may change; do not parse)
      * @param int|string $code       HTTP status code (also used as ResponseCode)
      * @param string     $error_code Machine-readable error code (e.g. REEL_FILE_TOO_LARGE)
+     * @return never
      */
     function errorResponse($message, $code = 401, string $error_code = '') {
         http_response_code((int)$code);

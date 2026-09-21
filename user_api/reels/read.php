@@ -27,29 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 // --- Optional auth (determine if the requester is the property owner) --------
-$request_uid = 0;
-
-// Try Bearer first
-$authHeader = $_SERVER['HTTP_AUTHORIZATION']
-    ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION']
-    ?? '';
-if (empty($authHeader) && function_exists('getallheaders')) {
-    $h          = getallheaders();
-    $authHeader = $h['Authorization'] ?? $h['authorization'] ?? '';
-}
-if (! empty($authHeader) && stripos($authHeader, 'Bearer ') === 0) {
-    // Attempt to decode — fail silently (read endpoint is public by default)
-    $rawToken = substr($authHeader, 7);
-    $secret   = getConfig('JWT_SECRET');
-    try {
-        $decoded     = (array) \Firebase\JWT\JWT::decode($rawToken, new \Firebase\JWT\Key($secret, 'HS256'));
-        $request_uid = (int)($decoded['sub'] ?? 0);
-    } catch (\Throwable $e) {
-        $request_uid = 0;
-    }
-} elseif (isset($_GET['uid']) && is_numeric($_GET['uid'])) {
-    $request_uid = (int)$_GET['uid'];
-}
+$request_uid = optionalAuth($_GET['uid'] ?? null);
 
 // --- Input params ------------------------------------------------------------
 $reel_id = isset($_GET['reel_id']) ? intval($_GET['reel_id']) : 0;
@@ -69,6 +47,8 @@ $row = $rstate->query("
         r.video_path,
         r.thumbnail_path,
         r.status,
+        r.views,
+        r.created_at,
         r.processing_error,
         p.title           AS property_title,
         p.address         AS property_address,
@@ -76,9 +56,17 @@ $row = $rstate->query("
         p.price           AS property_price,
         p.beds,
         p.bathroom,
-        p.add_user_id
+        p.add_user_id,
+        u.name            AS host_name,
+        u.pro_pic         AS host_pic,
+        (SELECT COUNT(*) FROM tbl_reel_likes l WHERE l.reel_id = r.id) as likes_count,
+        (SELECT COUNT(*) FROM tbl_reel_saves s WHERE s.reel_id = r.id) as saves_count,
+        (SELECT COUNT(*) FROM tbl_reel_comments c WHERE c.reel_id = r.id) as comments_count,
+        (SELECT COUNT(*) FROM tbl_reel_likes l WHERE l.reel_id = r.id AND l.user_id = $request_uid) as has_liked,
+        (SELECT COUNT(*) FROM tbl_reel_saves s WHERE s.reel_id = r.id AND s.user_id = $request_uid) as has_saved
     FROM tbl_reels r
     JOIN tbl_property p ON r.prop_id = p.id
+    JOIN tbl_user u ON p.add_user_id = u.id
     WHERE $where
     LIMIT 1
 ")->fetch_assoc();
@@ -97,6 +85,19 @@ if (! $is_owner && $status !== 1) {
 
 // Build response — reelToArray handles processing_error inclusion for status=2
 $reel = reelToArray($row);
+$reel['views'] = (int)($row['views'] ?? 0);
+$reel['created_at'] = $row['created_at'];
+$reel['likes_count'] = (int)$row['likes_count'];
+$reel['saves_count'] = (int)$row['saves_count'];
+$reel['comments_count'] = (int)$row['comments_count'];
+$reel['has_liked'] = (int)$row['has_liked'] > 0;
+$reel['has_saved'] = (int)$row['has_saved'] > 0;
+
+$reel['host'] = [
+    'name' => $row['host_name'] ?? '',
+    'pic_url' => absoluteMediaUrl($row['host_pic'] ?? ''),
+];
+
 $reel['property'] = [
     'title'     => $row['property_title'] ?? '',
     'address'   => $row['property_address'] ?? '',
