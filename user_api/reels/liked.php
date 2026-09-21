@@ -1,24 +1,10 @@
 <?php
 /**
- * user_api/reels/index.php
+ * user_api/reels/liked.php
  *
- * GET /user_api/reels/index.php
+ * GET /user_api/reels/liked.php
  *
- * Public paginated reel feed. Returns only status=1 (ready) reels.
- * Cursor-based pagination — newest reels first.
- *
- * Query params:
- *   last_id  int  Cursor from previous page (0 or omit for first page)
- *   limit    int  Items per page (1–30, default 10)
- *
- * Success response (200 — even when empty):
- *   {
- *     "ResponseCode": "200",
- *     "Result": "true",
- *     "ResponseMsg": "Reels fetched successfully.",
- *     "reels": [ { reel object with video_url, thumbnail_url, ... }, ... ],
- *     "pagination": { "next_cursor": 14, "has_more": true, "limit": 10 }
- *   }
+ * Paginated feed of reels the authenticated user has liked.
  */
 require dirname(dirname(__DIR__)) . '/include/reconfig.php';
 require dirname(dirname(__DIR__)) . '/include/auth.php';
@@ -29,6 +15,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);
     errorResponse('Method Not Allowed. Expected GET.', 405);
 }
+
+// --- Auth --------------------------------------------------------------------
+$legacy_uid = $_GET['uid'] ?? null;
+$auth_uid = requireAuth($legacy_uid);
 
 // --- Pagination params -------------------------------------------------------
 $raw_last_id = $_GET['last_id'] ?? '0';
@@ -41,14 +31,12 @@ if (! is_numeric($raw_last_id) || ! is_numeric($raw_limit)) {
 $last_id = max(0, (int)$raw_last_id);
 $limit   = max(1, min(30, (int)$raw_limit));
 
-$legacy_uid = $_GET['uid'] ?? null;
-$auth_uid = optionalAuth($legacy_uid);
-
 // --- Query -------------------------------------------------------------------
-$cursor_clause = $last_id > 0 ? "AND r.id < $last_id" : '';
+$cursor_clause = $last_id > 0 ? "AND rl.id < $last_id" : '';
 
 $query = "
     SELECT
+        rl.id             AS engagement_id,
         r.id              AS id,
         r.prop_id,
         r.video_path,
@@ -67,14 +55,15 @@ $query = "
         (SELECT COUNT(*) FROM tbl_reel_likes l WHERE l.reel_id = r.id) as likes_count,
         (SELECT COUNT(*) FROM tbl_reel_saves s WHERE s.reel_id = r.id) as saves_count,
         (SELECT COUNT(*) FROM tbl_reel_comments c WHERE c.reel_id = r.id) as comments_count,
-        (SELECT COUNT(*) FROM tbl_reel_likes l WHERE l.reel_id = r.id AND l.user_id = $auth_uid) as has_liked,
+        1                 as has_liked,
         (SELECT COUNT(*) FROM tbl_reel_saves s WHERE s.reel_id = r.id AND s.user_id = $auth_uid) as has_saved
-    FROM tbl_reels r
+    FROM tbl_reel_likes rl
+    JOIN tbl_reels r ON rl.reel_id = r.id
     JOIN tbl_property p ON r.prop_id = p.id
     JOIN tbl_user u ON p.add_user_id = u.id
-    WHERE r.status = 1
+    WHERE rl.user_id = $auth_uid AND r.status = 1
       $cursor_clause
-    ORDER BY r.id DESC
+    ORDER BY rl.id DESC
     LIMIT $limit
 ";
 
@@ -90,7 +79,7 @@ if ($sel && $sel->num_rows > 0) {
         $reel['likes_count'] = (int)$row['likes_count'];
         $reel['saves_count'] = (int)$row['saves_count'];
         $reel['comments_count'] = (int)$row['comments_count'];
-        $reel['has_liked'] = (int)$row['has_liked'] > 0;
+        $reel['has_liked'] = true;
         $reel['has_saved'] = (int)$row['has_saved'] > 0;
         
         $reel['host'] = [
@@ -107,8 +96,8 @@ if ($sel && $sel->num_rows > 0) {
             'bathroom'  => $row['bathroom'] ?? '',
         ];
         $reels[] = $reel;
-        if ((int)$row['id'] < $min_id) {
-            $min_id = (int)$row['id'];
+        if ((int)$row['engagement_id'] < $min_id) {
+            $min_id = (int)$row['engagement_id'];
         }
     }
 }
@@ -119,15 +108,17 @@ $next_cursor = 0;
 
 if (! empty($reels)) {
     $check = $rstate->query(
-        "SELECT id FROM tbl_reels r WHERE r.status = 1 AND r.id < $min_id LIMIT 1"
+        "SELECT rl.id FROM tbl_reel_likes rl
+         JOIN tbl_reels r ON rl.reel_id = r.id 
+         WHERE rl.user_id = $auth_uid AND r.status = 1 AND rl.id < $min_id 
+         LIMIT 1"
     );
     $has_more   = ($check && $check->num_rows > 0);
     $next_cursor = $has_more ? $min_id : 0;
 }
 
 // --- Response ----------------------------------------------------------------
-// An empty result is still a successful request (Req 17)
-successResponse('Reels fetched successfully.', [
+successResponse('Liked reels fetched successfully.', [
     'reels'      => $reels,
     'pagination' => [
         'next_cursor' => $next_cursor,

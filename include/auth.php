@@ -56,7 +56,7 @@ if (! function_exists('issueToken')) {
         $created = date('Y-m-d H:i:s', $now);
         $rstate->query(
             "INSERT INTO tbl_auth_tokens (uid, token_hash, expires_at, created_at)
-             VALUES (" . intval($uid) . ", '" . $rstate->real_escape_string($hash) . "', '$expires', '$created')"
+            VALUES (" . intval($uid) . ", '" . $rstate->real_escape_string($hash) . "', '$expires', '$created')"
         );
 
         return ['token' => $token, 'expires_in' => $ttl];
@@ -97,12 +97,14 @@ if (! function_exists('requireAuth')) {
             } catch (\Throwable $e) {
                 http_response_code(401);
                 errorResponse('Invalid or expired token.', 401, 'AUTH_TOKEN_INVALID');
+                exit;
             }
 
             $uid = (int)($decoded['sub'] ?? 0);
             if ($uid <= 0) {
                 http_response_code(401);
                 errorResponse('Invalid token subject.', 401, 'AUTH_TOKEN_INVALID');
+                exit;
             }
 
             // Optional: check token has not been revoked
@@ -114,6 +116,7 @@ if (! function_exists('requireAuth')) {
             if (! $check || $check->num_rows === 0) {
                 http_response_code(401);
                 errorResponse('Token has been revoked or expired.', 401, 'AUTH_TOKEN_REVOKED');
+                exit;
             }
 
             return $uid;
@@ -130,6 +133,7 @@ if (! function_exists('requireAuth')) {
         // 3. No valid credential
         http_response_code(401);
         errorResponse('Authentication required. Provide a Bearer token.', 401, 'AUTH_MISSING');
+        exit;
     }
 }
 
@@ -147,5 +151,61 @@ if (! function_exists('invalidateToken')) {
             "DELETE FROM tbl_auth_tokens WHERE token_hash = '"
             . $rstate->real_escape_string($hash) . "'"
         );
+    }
+}
+
+if (! function_exists('optionalAuth')) {
+    /**
+     * Verify the Bearer token from the Authorization header if present.
+     * Returns the authenticated uid (int) on success, or 0 if missing/invalid.
+     */
+    function optionalAuth($legacyUid = null): int
+    {
+        global $rstate;
+
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION']
+            ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION']
+            ?? '';
+
+        if (empty($authHeader) && function_exists('getallheaders')) {
+            $headers = getallheaders();
+            $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+        }
+
+        if (! empty($authHeader) && stripos($authHeader, 'Bearer ') === 0) {
+            $rawToken = substr($authHeader, 7);
+            $secret = getConfig('JWT_SECRET');
+
+            try {
+                $decoded = (array) \Firebase\JWT\JWT::decode($rawToken, new \Firebase\JWT\Key($secret, 'HS256'));
+            } catch (\Throwable $e) {
+                return 0;
+            }
+
+            $uid = (int)($decoded['sub'] ?? 0);
+            if ($uid <= 0) {
+                return 0;
+            }
+
+            $hash = hash('sha256', $rawToken);
+            $check = $rstate->query(
+                "SELECT id FROM tbl_auth_tokens WHERE token_hash = '"
+                . $rstate->real_escape_string($hash) . "' AND expires_at > NOW() LIMIT 1"
+            );
+            if (! $check || $check->num_rows === 0) {
+                return 0;
+            }
+
+            return $uid;
+        }
+
+        if ($legacyUid !== null) {
+            $uid = (int)$legacyUid;
+            if ($uid > 0) {
+                return $uid;
+            }
+        }
+
+        return 0;
     }
 }

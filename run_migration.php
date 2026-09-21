@@ -1,4 +1,9 @@
 <?php
+if (php_sapi_name() !== 'cli') {
+    http_response_code(403);
+    die("Forbidden");
+}
+
 require 'include/functions.php';
 
 $db_server = getConfig('DB_SERVER');
