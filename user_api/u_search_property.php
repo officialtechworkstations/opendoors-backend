@@ -52,11 +52,23 @@ if (($keyword == "" && $price == "" && empty($facility)) or $uid == "" or $count
             $additional_query .= ' AND `add_user_id` != ' . $uid;
         }
 
+        $facility_search_query = "";
+        if (!empty($keyword)) {
+            $fac_esc = $rstate->real_escape_string($keyword);
+            $fac_sel = $rstate->query("SELECT id FROM `tbl_facility` WHERE `title` COLLATE utf8mb4_general_ci LIKE '%" . $fac_esc . "%'");
+            if ($fac_sel && $fac_sel->num_rows > 0) {
+                while ($fac_row = $fac_sel->fetch_assoc()) {
+                    $facility_search_query .= " OR FIND_IN_SET(" . $fac_row['id'] . ", `facility`) > 0";
+                }
+            }
+        }
+
         $sel = $rstate->query($property_query = "SELECT * FROM `tbl_property`
                             WHERE (
                                     `title` COLLATE utf8mb4_general_ci LIKE '%" . $keyword . "%'
                                     OR `city` LIKE '%" . $keyword . "%'
                                     OR `address` LIKE '%" . $keyword . "%'
+                                    " . $facility_search_query . "
                                 )
                                 AND `country_id`= " . $country_id . "
                                 AND `status` = 1
