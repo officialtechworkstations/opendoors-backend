@@ -61,7 +61,7 @@ $query = "
     JOIN tbl_reels r ON rl.reel_id = r.id
     JOIN tbl_property p ON r.prop_id = p.id
     JOIN tbl_user u ON p.add_user_id = u.id
-    WHERE rl.user_id = $auth_uid AND r.status = 1
+    WHERE rl.user_id = $auth_uid AND r.status = 1 AND p.status = 1
       $cursor_clause
     ORDER BY rl.id DESC
     LIMIT $limit
@@ -110,7 +110,8 @@ if (! empty($reels)) {
     $check = $rstate->query(
         "SELECT rl.id FROM tbl_reel_likes rl
          JOIN tbl_reels r ON rl.reel_id = r.id 
-         WHERE rl.user_id = $auth_uid AND r.status = 1 AND rl.id < $min_id 
+         JOIN tbl_property p ON r.prop_id = p.id
+         WHERE rl.user_id = $auth_uid AND r.status = 1 AND p.status = 1 AND rl.id < $min_id 
          LIMIT 1"
     );
     $has_more   = ($check && $check->num_rows > 0);

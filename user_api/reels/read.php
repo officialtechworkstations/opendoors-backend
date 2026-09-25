@@ -50,6 +50,7 @@ $row = $rstate->query("
         r.views,
         r.created_at,
         r.processing_error,
+        p.status          AS property_status,
         p.title           AS property_title,
         p.address         AS property_address,
         p.image           AS property_image,
@@ -76,10 +77,11 @@ if (! $row) {
 }
 
 $status    = (int)$row['status'];
+$prop_status = (int)$row['property_status'];
 $is_owner  = ($request_uid > 0 && $request_uid === (int)$row['add_user_id']);
 
-// Public users only see ready reels
-if (! $is_owner && $status !== 1) {
+// Public users only see ready reels and published properties
+if (! $is_owner && ($status !== 1 || $prop_status !== 1)) {
     errorResponse('Reel not found.', 404, 'REEL_NOT_FOUND');
 }
 

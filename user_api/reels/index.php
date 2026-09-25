@@ -72,7 +72,7 @@ $query = "
     FROM tbl_reels r
     JOIN tbl_property p ON r.prop_id = p.id
     JOIN tbl_user u ON p.add_user_id = u.id
-    WHERE r.status = 1
+    WHERE r.status = 1 AND p.status = 1
       $cursor_clause
     ORDER BY r.id DESC
     LIMIT $limit
@@ -119,7 +119,7 @@ $next_cursor = 0;
 
 if (! empty($reels)) {
     $check = $rstate->query(
-        "SELECT id FROM tbl_reels r WHERE r.status = 1 AND r.id < $min_id LIMIT 1"
+        "SELECT r.id FROM tbl_reels r JOIN tbl_property p ON r.prop_id = p.id WHERE r.status = 1 AND p.status = 1 AND r.id < $min_id LIMIT 1"
     );
     $has_more   = ($check && $check->num_rows > 0);
     $next_cursor = $has_more ? $min_id : 0;
