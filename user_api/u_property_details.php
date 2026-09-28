@@ -145,6 +145,7 @@ if ($pro_id == '' or $uid == '') {
 	}
 
     $returnArr = array(
+        "share_url" => "https://links.opendoorsapp.com/properties/" . $pro_id,
         "propetydetails" => $fp,
         "facility" => $f,
         "gallery" => $v,

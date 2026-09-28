@@ -29,4 +29,13 @@
     <FilesMatch "^uploads/reels/.*\.(?:jpg|jpeg|png|webp)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
+
+    <FilesMatch "^apple-app-site-association$">
+        Header set Content-Type "application/json"
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^properties/([0-9]+)$ property_share.php?id=$1 [L,QSA]
 </IfModule>
