@@ -1,8 +1,0 @@
-[{ 
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.opendoors.appnew",
-    "sha256_cert_fingerprints": ["06:3A:38:03:C1:BC:02:82:EB:B2:8C:5C:E4:B6:A5:03:30:EF:8A:D2:94:1B:08:8D:CE:59:8A:0D:F3:18:87:B6"]
-  }
-}]

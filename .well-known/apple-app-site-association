@@ -1,8 +1,0 @@
-{
-  "applinks": {
-    "details": [{
-      "appIDs": ["24QSYQPJLT.opendoorsapp.com"],
-      "components": [{"/": "/properties/*"}]
-    }]
-  }
-}
