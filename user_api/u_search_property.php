@@ -72,6 +72,7 @@ if (($keyword == "" && $price == "" && empty($facility)) or $uid == "" or $count
                                 )
                                 AND `country_id`= " . $country_id . "
                                 AND `status` = 1
+								AND `deleted_at` IS NULL
                                 AND `is_sell` = 0 "
             . $additional_query
         );

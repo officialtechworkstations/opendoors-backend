@@ -41,7 +41,7 @@ $sel = $rstate->query("SELECT tbl_property.*, c.title AS property_type_title,
 			WHERE book_status='Completed' AND total_rate != 0
 			GROUP BY prop_id
 		) r ON r.prop_id = tbl_property.id
-		WHERE tbl_property.add_user_id = ".$uid." " . $additional_query . "
+		WHERE tbl_property.add_user_id = ".$uid." AND tbl_property.deleted_at IS NULL " . $additional_query . "
 	ORDER BY tbl_property.is_featured DESC, tbl_property.rate DESC, tbl_property.price DESC");
 while($row = $sel->fetch_assoc()) {
 		$pol['id'] = $row['id'];

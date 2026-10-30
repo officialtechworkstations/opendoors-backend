@@ -8,6 +8,7 @@
 	</style>
 	<?php require 'auth.php'; exit(); ?>
 <?php } ?>
+<?php $showDeleted = $_SESSION['stype'] !== 'Staff' && isset($_GET['deleted']) && $_GET['deleted'] === '1'; ?>
 <!-- Loader ends-->
 <!-- page-wrapper Start-->
 <div class="page-wrapper compact-wrapper" id="pageWrapper">
@@ -39,10 +40,25 @@
 					<div class="col-sm-12">
 						<div class="card">
 							<div class="card-body">
+								<?php if ($_SESSION['stype'] !== 'Staff') { ?>
+									<div class="mb-3">
+										<button type="button" id="bulk-delete-properties" class="btn <?php echo $showDeleted ? 'btn-success' : 'btn-danger'; ?>" disabled>
+											<i class="fa <?php echo $showDeleted ? 'fa-undo' : 'fa-trash'; ?>"></i>
+											<?php echo $showDeleted ? 'Restore selected' : 'Delete selected'; ?>
+										</button>
+										<span id="selected-property-count" class="ml-2">0 selected</span>
+										<a class="btn btn-outline-secondary ml-2" href="<?php echo $showDeleted ? 'list_properties.php' : 'list_properties.php?deleted=1'; ?>">
+											<?php echo $showDeleted ? 'Active properties' : 'Deleted properties'; ?>
+										</a>
+									</div>
+								<?php } ?>
 								<div class="table-responsive">
 									<table class="display" id="basic-1">
 										<thead>
 											<tr>
+												<?php if ($_SESSION['stype'] !== 'Staff') { ?>
+													<th data-orderable="false" class="sorting_disabled"><input type="checkbox" id="select-all-properties" aria-label="Select all properties"></th>
+												<?php } ?>
 												<th>Sr No.</th>
 												<th>Property Title</th>
 												<th>Property Type</th>
@@ -68,10 +84,13 @@
 											</tr>
 										</thead>
 										<tbody>
-											<?php $city = $rstate->query("SELECT tbl_property.*, rl.id AS reel_id, rl.video_path AS reel_video, rl.status AS reel_status, (SELECT GROUP_CONCAT(`title`) from `tbl_facility` WHERE find_in_set(tbl_facility.id,tbl_property.facility)) as facility_select FROM tbl_property LEFT JOIN tbl_reels rl ON rl.prop_id = tbl_property.id"); ?>
+											<?php $city = $rstate->query("SELECT tbl_property.*, rl.id AS reel_id, rl.video_path AS reel_video, rl.status AS reel_status, (SELECT GROUP_CONCAT(`title`) from `tbl_facility` WHERE find_in_set(tbl_facility.id,tbl_property.facility)) as facility_select FROM tbl_property LEFT JOIN tbl_reels rl ON rl.prop_id = tbl_property.id WHERE tbl_property.deleted_at IS " . ($showDeleted ? "NOT NULL" : "NULL")); ?>
 											<?php $i=0; ?>
 											<?php while($row = $city->fetch_assoc()) { $i = $i + 1; ?>
 												<tr>
+												<?php if ($_SESSION['stype'] !== 'Staff') { ?>
+													<td><input type="checkbox" class="property-select" value="<?php echo (int) $row['id']; ?>" aria-label="Select <?php echo htmlspecialchars($row['title'], ENT_QUOTES, 'UTF-8'); ?>"></td>
+												<?php } ?>
 													<td>
 														<?php echo $i; ?>
 													</td>
@@ -139,61 +158,26 @@
 															N/A
 														<?php } ?>
 													</td>
-													<?php 
-														if($_SESSION['stype'] == 'Staff')
-														{
-														if (in_array('Update', $property_per)) {
-														?>
-													<td style="white-space: nowrap; width: 15%;">
-														<div class="tabledit-toolbar btn-toolbar" style="text-align: left;">
-															<div class="btn-group btn-group-sm" style="float: none;">
-																<a href="add_properties.php?id=<?php echo $row['id'];?>" data-toggle="tooltip" title="edit property" class="tabledit-edit-button" style="float: none; margin: 5px;">
-																	<?xml version="1.0" encoding="UTF-8"?>
-																	<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-																		<rect width="30" height="30" rx="15" fill="#79F9B4"/>
-																		<path d="M22.5168 9.34109L20.6589 7.48324C20.0011 6.83703 18.951 6.837 18.2933 7.49476L16.7355 9.06416L20.9359 13.2645L22.5052 11.7067C23.163 11.0489 23.163 9.99885 22.5168 9.34109ZM15.5123 10.2873L8 17.8342V22H12.1658L19.7127 14.4877L15.5123 10.2873Z" fill="#25314C"/>
-																	</svg>
-																</a>
-																<?php if($row['pbuysell'] != 1) { 
-																	if($row['is_sell'] != 1)
-																	{
-																	?>
-																<a href="#"  data-id="<?php echo $row['id'];?>" class="drop" data-status="1" data-type="update_status" coll-type="proper_sell" style="float: none; margin: 5px;"><img src="images/9385054.png" data-toggle="tooltip" title="sell property done" width="30px"/></a>
-																<?php } else {} }?>
-															</div>
-														</div>
-													</td>
-													<?php 
-														}			
-														}
-														else 
-														{
-														?>
-													<td style="white-space: nowrap; width: 15%;">
-														<div class="tabledit-toolbar btn-toolbar" style="text-align: left;">
-															<div class="btn-group btn-group-sm" style="float: none;">
-																<a href="add_properties.php?id=<?php echo $row['id'];?>" data-toggle="tooltip" title="edit property" class="tabledit-edit-button" style="float: none; margin: 5px;">
-																	<?xml version="1.0" encoding="UTF-8"?>
-																	<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-																		<rect width="30" height="30" rx="15" fill="#79F9B4"/>
-																		<path d="M22.5168 9.34109L20.6589 7.48324C20.0011 6.83703 18.951 6.837 18.2933 7.49476L16.7355 9.06416L20.9359 13.2645L22.5052 11.7067C23.163 11.0489 23.163 9.99885 22.5168 9.34109ZM15.5123 10.2873L8 17.8342V22H12.1658L19.7127 14.4877L15.5123 10.2873Z" fill="#25314C"/>
-																	</svg>
-																</a>
-														<a href="#" data-id="<?php echo $row['id']; ?>" class="drop btn btn-sm btn-danger" data-status="0" data-type="property_delete" coll-type="property_delete" data-toggle="tooltip" title="delete property" style="float: none; margin: 5px;">
-															<i class="fa fa-trash"></i>
-														</a>
-																<?php if($row['pbuysell'] != 1) { 
-																	if($row['is_sell'] != 1)
-																	{
-																	?>
-																<a href="#"  data-id="<?php echo $row['id'];?>" class="drop" data-status="1" data-type="update_status" coll-type="proper_sell" style="float: none; margin: 5px;"><img src="images/9385054.png" data-toggle="tooltip" title="sell property done" width="30px"/></a>
-																<?php } else {} }?>
-															</div>
-														</div>
-													</td>
-													<?php 
-														}
-														?>
+													<?php if ($_SESSION['stype'] === 'Staff' && in_array('Update', $property_per)) { ?>
+														<td style="white-space: nowrap; width: 15%;">
+															<a href="add_properties.php?id=<?php echo (int) $row['id']; ?>" class="btn btn-sm btn-success" title="Edit property"><i class="fa fa-edit"></i></a>
+															<?php if ($row['pbuysell'] != 1 && $row['is_sell'] != 1) { ?>
+																<a href="#" data-id="<?php echo (int) $row['id']; ?>" class="drop" data-status="1" data-type="update_status" coll-type="proper_sell"><img src="images/9385054.png" title="Mark property sold" width="30"></a>
+															<?php } ?>
+														</td>
+													<?php } elseif ($_SESSION['stype'] !== 'Staff') { ?>
+														<td style="white-space: nowrap; width: 15%;">
+															<?php if ($showDeleted) { ?>
+																<a href="#" data-id="<?php echo (int) $row['id']; ?>" class="drop btn btn-sm btn-success" data-status="0" data-type="property_restore" coll-type="property" title="Restore as unpublished"><i class="fa fa-undo"></i></a>
+															<?php } else { ?>
+																<a href="add_properties.php?id=<?php echo (int) $row['id']; ?>" class="btn btn-sm btn-success" title="Edit property"><i class="fa fa-edit"></i></a>
+																<a href="#" data-id="<?php echo (int) $row['id']; ?>" class="drop btn btn-sm btn-danger" data-status="0" data-type="property_delete" coll-type="property" title="Move to deleted properties"><i class="fa fa-trash"></i></a>
+																<?php if ($row['pbuysell'] != 1 && $row['is_sell'] != 1) { ?>
+																	<a href="#" data-id="<?php echo (int) $row['id']; ?>" class="drop" data-status="1" data-type="update_status" coll-type="proper_sell"><img src="images/9385054.png" title="Mark property sold" width="30"></a>
+																<?php } ?>
+															<?php } ?>
+														</td>
+													<?php } ?>
 												</tr>
 											<?php } ?>
 										</tbody>
@@ -235,6 +219,75 @@
 
 <script>
 $(document).ready(function() {
+    <?php if ($_SESSION['stype'] !== 'Staff') { ?>
+    var selectedProperties = new Set();
+    var propertyTable = $('#basic-1').DataTable();
+
+    function refreshBulkSelection() {
+        propertyTable.rows().nodes().to$().find('.property-select').each(function() {
+            $(this).prop('checked', selectedProperties.has(String($(this).val())));
+        });
+        $('#selected-property-count').text(selectedProperties.size + ' selected');
+        $('#bulk-delete-properties').prop('disabled', selectedProperties.size === 0);
+
+        var filteredCheckboxes = propertyTable.rows({ search: 'applied' }).nodes().to$().find('.property-select');
+        var allFilteredSelected = filteredCheckboxes.length > 0 && filteredCheckboxes.toArray().every(function(checkbox) {
+            return selectedProperties.has(String($(checkbox).val()));
+        });
+        $('#select-all-properties').prop('checked', allFilteredSelected);
+    }
+
+    $('#basic-1').on('change', '.property-select', function() {
+        var id = String($(this).val());
+        this.checked ? selectedProperties.add(id) : selectedProperties.delete(id);
+        refreshBulkSelection();
+    });
+
+    $('#select-all-properties').on('click', function(event) {
+        event.stopPropagation();
+    }).on('change', function() {
+        var shouldSelect = this.checked;
+        propertyTable.rows({ search: 'applied' }).nodes().to$().find('.property-select').each(function() {
+            var id = String($(this).val());
+            shouldSelect ? selectedProperties.add(id) : selectedProperties.delete(id);
+        });
+        refreshBulkSelection();
+    });
+
+    propertyTable.on('draw', refreshBulkSelection);
+
+    $('#bulk-delete-properties').on('click', function() {
+        var ids = Array.from(selectedProperties);
+        var isRestore = <?php echo $showDeleted ? 'true' : 'false'; ?>;
+        var actionLabel = isRestore ? 'Restore ' : 'Move ';
+        var confirmation = actionLabel + ids.length + ' selected ' + (ids.length === 1 ? 'property' : 'properties') +
+            (isRestore ? ' as unpublished?' : ' to deleted properties?');
+        if (!ids.length || !confirm(confirmation)) {
+            return;
+        }
+
+        $(this).prop('disabled', true);
+        $.ajax({
+            type: 'post',
+            url: 'include/property.php',
+            data: { type: isRestore ? 'property_bulk_restore' : 'property_bulk_delete', ids: ids },
+            success: function(response) {
+                var result = typeof response === 'string' ? JSON.parse(response) : response;
+                alert(result.title);
+                if (result.Result === 'true') {
+                    window.location.reload();
+                } else {
+                    refreshBulkSelection();
+                }
+            },
+            error: function() {
+                alert('The selected properties could not be updated. Please try again.');
+                refreshBulkSelection();
+            }
+        });
+    });
+    <?php } ?>
+
     $('.view-reel-btn').on('click', function(e) {
         e.preventDefault();
         var videoUrl = $(this).data('video');

@@ -34,7 +34,11 @@ if (
         $wall_amt = strip_tags(mysqli_real_escape_string($rstate, $data['wall_amt']));
 
         $check_date = $rstate->query("SELECT * FROM tbl_book WHERE (check_in BETWEEN '" . $check_in . "' and '" . $check_out . "' OR check_out BETWEEN '" . $check_in . "' and '" . $check_out . "') and prop_id=" . $prop_id . " and book_status!='Cancelled'");
-        $properti = $rstate->query("select * from tbl_property where id=" . $prop_id . "")->fetch_assoc();
+        $properti = $rstate->query("select * from tbl_property where id=" . $prop_id . " and status=1 and deleted_at IS NULL")->fetch_assoc();
+        if (empty($properti)) {
+            echo json_encode(["ResponseCode" => "404", "Result" => "false", "ResponseMsg" => "Property is unavailable!"]);
+            exit;
+        }
         $prop_img = $properti['image'];
         $prop_title = $properti['title'];
         $add_user_id = $properti['add_user_id'];

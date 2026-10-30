@@ -25,7 +25,7 @@ else
 }
 while($row = $sel->fetch_assoc())
 	{
-		$props = $rstate->query("select * from tbl_property where id=".$row['property_id']." and country_id=".$country_id."")->fetch_assoc();
+		$props = $rstate->query("select * from tbl_property where id=".$row['property_id']." and country_id=".$country_id." and status=1 and deleted_at IS NULL")->fetch_assoc();
 		if(!empty($props['id']))
 		{
 		$fp['id'] = $props['id'];

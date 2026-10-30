@@ -31,22 +31,22 @@ if ($data['uid'] == '' or $data['cid'] == '' or $data['country_id'] == '') {
 	{
 		if($cid == 0)
 	{
-		$props = $rstate->query("select * from tbl_property where country_id=".$country_id."".$additional_query);
+		$props = $rstate->query("select * from tbl_property where country_id=".$country_id." and status=1 and deleted_at IS NULL".$additional_query);
 	}
 	else 
 	{
-	$props = $rstate->query("select * from tbl_property where ptype=".$cid." and country_id=".$country_id."".$additional_query);
+	$props = $rstate->query("select * from tbl_property where ptype=".$cid." and country_id=".$country_id." and status=1 and deleted_at IS NULL".$additional_query);
 	}
 	}
 	else 
 	{
 	if($cid == 0)
 	{
-		$props = $rstate->query("select * from tbl_property where country_id=".$country_id." and add_user_id!=".$uid."".$additional_query);
+		$props = $rstate->query("select * from tbl_property where country_id=".$country_id." and add_user_id!=".$uid." and status=1 and deleted_at IS NULL".$additional_query);
 	}
 	else 
 	{
-	$props = $rstate->query("select * from tbl_property where ptype=".$cid." and country_id=".$country_id." and add_user_id!=".$uid."".$additional_query);
+	$props = $rstate->query("select * from tbl_property where ptype=".$cid." and country_id=".$country_id." and add_user_id!=".$uid." and status=1 and deleted_at IS NULL".$additional_query);
 	}
 	}
 	while($rows = $props->fetch_assoc())

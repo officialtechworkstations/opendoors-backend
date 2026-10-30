@@ -45,6 +45,7 @@ if (!isset($data['latitude']) || !isset($data['longitude'])) {
                         WHERE uid = " . $uid . "
                     ) f ON f.property_id = p.id
                     WHERE p.status = 1 
+						AND p.deleted_at IS NULL
                         AND p.is_sell = 0
                         AND p.latitude != '' AND p.longtitude != ''
                         AND p.latitude != '0' AND p.longtitude != '0'

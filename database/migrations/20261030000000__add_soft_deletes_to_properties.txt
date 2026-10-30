@@ -1,0 +1,3 @@
+ALTER TABLE `tbl_property`
+    ADD COLUMN `deleted_at` DATETIME NULL DEFAULT NULL AFTER `caution_fee`,
+    ADD INDEX `idx_tbl_property_deleted_at` (`deleted_at`);

@@ -88,6 +88,7 @@ if ($data['uid'] == '' or $data['country_id'] == '') {
 					) f ON f.property_id = p.id
 					WHERE p.country_id=" . intval($country_id) . " 
 						AND p.status = 1 
+						AND p.deleted_at IS NULL
 						AND p.is_sell = 0" . $additional_query;
     $ownerFilter = ($uid == 0) ? "" : " AND p.add_user_id!=" . intval($uid);
     $prop        = $rstate->query($propertySelect . $ownerFilter . " AND p.is_featured=1 ORDER BY p.id DESC LIMIT 5");

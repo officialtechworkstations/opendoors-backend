@@ -18,7 +18,11 @@ if ($pro_id == '' or $uid == '') {
     $v = array();
     $vr = array();
     $po = array();
-    $sel = $rstate->query("select * from tbl_property where id=" . $pro_id . "")->fetch_assoc();
+    $sel = $rstate->query("select * from tbl_property where id=" . $pro_id . " and deleted_at IS NULL")->fetch_assoc();
+    if (empty($sel)) {
+        echo json_encode(["ResponseCode" => "404", "Result" => "false", "ResponseMsg" => "Property not found!"]);
+        exit;
+    }
 
     $vr[] = array(
         'image' => $sel['image'],

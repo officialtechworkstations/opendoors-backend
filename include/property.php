@@ -1487,19 +1487,24 @@ if (isset($_POST["type"])) {
                 "action" => "list_payout.php",
             ];
         }
-    } elseif ($_POST["type"] == "property_delete") {
-        $id = isset($_POST["id"]) ? (int) $_POST["id"] : 0;
+    } elseif (in_array($_POST["type"], ["property_delete", "property_bulk_delete", "property_restore", "property_bulk_restore"], true)) {
+        $isBulkAction = in_array($_POST["type"], ["property_bulk_delete", "property_bulk_restore"], true);
+        $isRestore = in_array($_POST["type"], ["property_restore", "property_bulk_restore"], true);
+        $requestedIds = $isBulkAction
+            ? ($_POST["ids"] ?? [])
+            : [$_POST["id"] ?? 0];
+        $propertyIds = array_values(array_unique(array_filter(array_map("intval", (array) $requestedIds))));
         $isAdmin = isset($_SESSION["stype"]) && $_SESSION["stype"] === "Admin";
 
         if (! $isAdmin) {
             $returnArr = [
                 "ResponseCode" => "200",
                 "Result" => "false",
-                "title" => "You are not authorized to delete properties.",
+                "title" => "You are not authorized to manage deleted properties.",
                 "message" => "Property section!",
                 "action" => "list_properties.php",
             ];
-        } elseif ($id < 1) {
+        } elseif (! $propertyIds) {
             $returnArr = [
                 "ResponseCode" => "200",
                 "Result" => "false",
@@ -1508,84 +1513,28 @@ if (isset($_POST["type"])) {
                 "action" => "list_properties.php",
             ];
         } else {
-            $property = $rstate->query("SELECT id FROM tbl_property WHERE id=" . $id . " LIMIT 1");
-            $booking = $rstate->query("SELECT id FROM tbl_book WHERE prop_id=" . $id . " LIMIT 1");
+            $requestedSql = implode(",", $propertyIds);
+            $stateCondition = $isRestore ? "deleted_at IS NOT NULL" : "deleted_at IS NULL";
+            $fieldValues = $isRestore
+                ? "deleted_at=NULL, status=0, is_featured=0"
+                : "deleted_at=NOW(), status=0, is_featured=0";
 
-            if (! $property || $property->num_rows === 0) {
-                $returnArr = [
-                    "ResponseCode" => "200",
-                    "Result" => "false",
-                    "title" => "Property not found.",
-                    "message" => "Property section!",
-                    "action" => "list_properties.php",
-                ];
-            } elseif ($booking && $booking->num_rows > 0) {
-                $returnArr = [
-                    "ResponseCode" => "200",
-                    "Result" => "false",
-                    "title" => "This property has booking history and cannot be deleted. Unpublish it instead.",
-                    "message" => "Property section!",
-                    "action" => "list_properties.php",
-                ];
-            } else {
-                try {
-                    $rstate->begin_transaction();
-                    $delete = static function ($sql) use ($rstate) {
-                        if (! $rstate->query($sql)) {
-                            throw new RuntimeException($rstate->error);
-                        }
-                    };
+            $updated = $rstate->query(
+                "UPDATE tbl_property SET " . $fieldValues .
+                " WHERE id IN (" . $requestedSql . ") AND " . $stateCondition
+            );
+            $affectedCount = $updated ? $rstate->affected_rows : 0;
+            $actionWord = $isRestore ? "restored" : "moved to deleted properties";
 
-                    $reelIds = [];
-                    $reels = $rstate->query("SELECT id FROM tbl_reels WHERE prop_id=" . $id);
-                    if ($reels) {
-                        while ($reel = $reels->fetch_assoc()) {
-                            $reelIds[] = (int) $reel["id"];
-                        }
-                    }
-
-                    if ($reelIds) {
-                        $ids = implode(",", $reelIds);
-                        foreach (["tbl_reel_likes", "tbl_reel_saves", "tbl_reel_comments"] as $engagementTable) {
-                            $tableExists = $rstate->query("SHOW TABLES LIKE '" . $engagementTable . "'");
-                            if ($tableExists && $tableExists->num_rows > 0) {
-                                $delete("DELETE FROM " . $engagementTable . " WHERE reel_id IN (" . $ids . ")");
-                            }
-                        }
-                    }
-
-                    $delete("DELETE FROM tbl_reels WHERE prop_id=" . $id);
-                    $delete("DELETE FROM tbl_fav WHERE property_id=" . $id);
-                    $delete("DELETE FROM tbl_enquiry WHERE prop_id=" . $id);
-                    $delete("DELETE FROM tbl_extra WHERE pid=" . $id);
-                    $delete("DELETE FROM tbl_gallery WHERE pid=" . $id);
-                    $delete("DELETE FROM tbl_gal_cat WHERE pid=" . $id);
-                    $delete("DELETE FROM tbl_property WHERE id=" . $id);
-
-                    if ($rstate->affected_rows !== 1) {
-                        throw new RuntimeException("Property deletion did not affect one row.");
-                    }
-
-                    $rstate->commit();
-                    $returnArr = [
-                        "ResponseCode" => "200",
-                        "Result" => "true",
-                        "title" => "Property deleted successfully!",
-                        "message" => "Property section!",
-                        "action" => "list_properties.php",
-                    ];
-                } catch (Throwable $e) {
-                    $rstate->rollback();
-                    logger("Property deletion failed for property " . $id . ": " . $e->getMessage());
-                    $returnArr = [
-                        "ResponseCode" => "200",
-                        "Result" => "false",
-                        "title" => "Property could not be deleted.",
-                        "message" => "Property section!",
-                        "action" => "list_properties.php",
-                    ];
-                }
-            }
+            $returnArr = [
+                "ResponseCode" => "200",
+                "Result" => $updated && $affectedCount > 0 ? "true" : "false",
+                "title" => $updated && $affectedCount > 0
+                    ? $affectedCount . " " . ($affectedCount === 1 ? "property" : "properties") . " " . $actionWord . " successfully!"
+                    : "No matching properties were updated.",
+                "message" => "Property section!",
+                "action" => $isRestore ? "list_properties.php?deleted=1" : "list_properties.php",
+            ];
         }
     } elseif ($_POST["type"] == "update_status") {
         $id = $_POST["id"];
