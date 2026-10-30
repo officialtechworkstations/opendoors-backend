@@ -179,6 +179,9 @@
 																		<path d="M22.5168 9.34109L20.6589 7.48324C20.0011 6.83703 18.951 6.837 18.2933 7.49476L16.7355 9.06416L20.9359 13.2645L22.5052 11.7067C23.163 11.0489 23.163 9.99885 22.5168 9.34109ZM15.5123 10.2873L8 17.8342V22H12.1658L19.7127 14.4877L15.5123 10.2873Z" fill="#25314C"/>
 																	</svg>
 																</a>
+														<a href="#" data-id="<?php echo $row['id']; ?>" class="drop btn btn-sm btn-danger" data-status="0" data-type="property_delete" coll-type="property_delete" data-toggle="tooltip" title="delete property" style="float: none; margin: 5px;">
+															<i class="fa fa-trash"></i>
+														</a>
 																<?php if($row['pbuysell'] != 1) { 
 																	if($row['is_sell'] != 1)
 																	{
