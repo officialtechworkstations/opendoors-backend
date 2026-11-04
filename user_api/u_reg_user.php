@@ -26,8 +26,9 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
     
     $name     = trim(strip_tags(mysqli_real_escape_string($rstate, $data['name'])));
     $email     = trim(strip_tags(mysqli_real_escape_string($rstate, $data['email'])));
-    $mobile    = trim(strip_tags(mysqli_real_escape_string($rstate, $data['mobile'])));
-    $ccode     = trim(strip_tags(mysqli_real_escape_string($rstate, $data['ccode'])));
+    $phone     = normalizePhoneIdentity($data['mobile'], $data['ccode']);
+    $mobile    = $rstate->real_escape_string($phone['mobile']);
+    $ccode     = $rstate->real_escape_string($phone['ccode']);
     $password  = password_hash(trim(strip_tags($data['password'])), PASSWORD_BCRYPT);
     $refercode = trim(strip_tags(mysqli_real_escape_string($rstate, $data['refercode'])));
     $accept_newsletter = trim(strip_tags(mysqli_real_escape_string($rstate, $data['accept_newsletter']))) ? 1 : 0;
@@ -35,10 +36,10 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
     $accept_terms_condition = ! empty($data['accept_terms_condition']) ? 1 : 0;
     
     
-    $checkmob   = $rstate->query("select * from tbl_user where mobile=" . $mobile . "");
+    $existingMobile = findUserByPhone($rstate, $data['mobile'], $data['ccode']);
     $checkemail = $rstate->query("select * from tbl_user where email='" . $email . "'");
     
-    if ($checkmob->num_rows != 0) {
+    if ($existingMobile) {
         $returnArr = array(
             "ResponseCode" => "401",
             "Result" => "false",

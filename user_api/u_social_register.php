@@ -31,8 +31,11 @@ function social_generate_random()
 
 $provider = isset($data['provider']) ? strtolower(trim($data['provider'])) : '';
 $token    = $data['token'] ?? '';
-$mobile   = isset($data['mobile']) ? trim(strip_tags(mysqli_real_escape_string($rstate, $data['mobile']))) : '';
-$ccode    = isset($data['ccode']) ? trim(strip_tags(mysqli_real_escape_string($rstate, $data['ccode']))) : '';
+$rawMobile = $data['mobile'] ?? '';
+$rawCcode  = $data['ccode'] ?? '';
+$phone     = normalizePhoneIdentity($rawMobile, $rawCcode);
+$mobile    = $phone['mobile'];
+$ccode     = $phone['ccode'];
 
 if ($provider === '' || $token === '' || $mobile === '' || $ccode === '') {
     echo json_encode([
@@ -117,7 +120,7 @@ $accept_terms_condition = ! empty($data['accept_terms_condition']) ? 1 : 0;
 $refercode              = isset($data['refercode']) ? trim(strip_tags(mysqli_real_escape_string($rstate, $data['refercode']))) : '';
 
 // Phone must still be unused.
-if ($rstate->query("SELECT id FROM tbl_user WHERE mobile='" . $mobile . "' AND ccode='" . $ccode . "'")->num_rows != 0) {
+if (findUserByPhone($rstate, $rawMobile, $rawCcode) !== null) {
     echo json_encode([
         "ResponseCode" => "401",
         "Result"       => "false",

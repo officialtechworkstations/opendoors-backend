@@ -8,12 +8,12 @@ if($data['mobile'] == '' or  $data['ccode'] == '')
 }
 else
 {
-    $mobile = strip_tags(mysqli_real_escape_string($rstate,$data['mobile']));
-    $ccode    = strip_tags(mysqli_real_escape_string($rstate, $data['ccode']));
+    $mobile = strip_tags($data['mobile']);
+    $ccode = strip_tags($data['ccode']);
     
-$chek = $rstate->query("select * from tbl_user where mobile='".$mobile."' and ccode='" . $ccode . "'")->num_rows;
+$chek = findUserByPhone($rstate, $mobile, $ccode) !== null;
 
-if($chek != 0)
+if($chek)
 {
 	$returnArr = array("ResponseCode"=>"401","Result"=>"false","ResponseMsg"=>"Already Exist Mobile Number!");
 }

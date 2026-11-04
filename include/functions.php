@@ -29,6 +29,81 @@ if (! function_exists('getConfig')) {
     }
 }
 
+if (! function_exists('normalizePhoneIdentity')) {
+    /**
+     * Normalize a split country-code/mobile pair while retaining lookup
+     * candidates for rows saved by older clients in local or E.164 formats.
+     */
+    function normalizePhoneIdentity($mobile, $countryCode): array
+    {
+        $code = preg_replace('/\D+/', '', (string) $countryCode);
+        $inputMobile = preg_replace('/\D+/', '', (string) $mobile);
+        $canonicalMobile = $inputMobile;
+
+        if ($code !== '' && strpos($canonicalMobile, $code) === 0) {
+            $canonicalMobile = substr($canonicalMobile, strlen($code));
+        }
+        if ($canonicalMobile !== '' && $canonicalMobile[0] === '0') {
+            $canonicalMobile = substr($canonicalMobile, 1);
+        }
+
+        $mobileCandidates = array_values(array_unique(array_filter([
+            $canonicalMobile,
+            '0' . $canonicalMobile,
+            $inputMobile,
+            $code !== '' ? $code . $canonicalMobile : '',
+            $code !== '' ? '+' . $code . $canonicalMobile : '',
+        ], static function ($value) {
+            return $value !== '';
+        })));
+
+        $codeCandidates = array_values(array_unique(array_filter([
+            $code,
+            $code !== '' ? '+' . $code : '',
+            trim((string) $countryCode),
+        ], static function ($value) {
+            return $value !== '';
+        })));
+
+        return [
+            'ccode' => $code,
+            'mobile' => $canonicalMobile,
+            'mobile_candidates' => $mobileCandidates,
+            'ccode_candidates' => $codeCandidates,
+        ];
+    }
+}
+
+if (! function_exists('findUserByPhone')) {
+    function findUserByPhone(mysqli $database, $mobile, $countryCode, bool $activeOnly = false)
+    {
+        $phone = normalizePhoneIdentity($mobile, $countryCode);
+        if ($phone['mobile'] === '' || $phone['ccode'] === '') {
+            return null;
+        }
+
+        $quote = static function ($value) use ($database) {
+            return "'" . $database->real_escape_string($value) . "'";
+        };
+        $mobiles = implode(',', array_map($quote, $phone['mobile_candidates']));
+        $codes = implode(',', array_map($quote, $phone['ccode_candidates']));
+        $digitMobiles = array_values(array_unique(array_map(static function ($value) {
+            return preg_replace('/\D+/', '', $value);
+        }, $phone['mobile_candidates'])));
+        $digitMobileSql = implode(',', array_map($quote, $digitMobiles));
+        $normalizedMobileColumn = "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(mobile, ' ', ''), '-', ''), '(', ''), ')', ''), '+', '')";
+        $normalizedCodeColumn = "REPLACE(REPLACE(ccode, ' ', ''), '+', '')";
+        $status = $activeOnly ? ' AND status = 1' : '';
+        $query = $database->query(
+            "SELECT * FROM tbl_user WHERE ((mobile IN ($mobiles) AND ccode IN ($codes))" .
+            " OR ($normalizedMobileColumn IN ($digitMobileSql) AND $normalizedCodeColumn='" .
+            $database->real_escape_string($phone['ccode']) . "'))$status ORDER BY id DESC LIMIT 1"
+        );
+
+        return $query ? $query->fetch_assoc() : null;
+    }
+}
+
 if (! function_exists('logger')) {
     function logger($message)
     {

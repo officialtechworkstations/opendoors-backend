@@ -17,8 +17,11 @@ header('Content-type: text/json');
 $data     = json_decode(file_get_contents('php://input'), true);
 $provider = isset($data['provider']) ? strtolower(trim($data['provider'])) : '';
 $token    = $data['token'] ?? '';
-$mobile   = isset($data['mobile']) ? trim(strip_tags(mysqli_real_escape_string($rstate, $data['mobile']))) : '';
-$ccode    = isset($data['ccode']) ? trim(strip_tags(mysqli_real_escape_string($rstate, $data['ccode']))) : '';
+$rawMobile = $data['mobile'] ?? '';
+$rawCcode  = $data['ccode'] ?? '';
+$phone     = normalizePhoneIdentity($rawMobile, $rawCcode);
+$mobile    = $phone['mobile'];
+$ccode     = $phone['ccode'];
 
 if ($provider === '' || $token === '' || $mobile === '' || $ccode === '') {
     echo json_encode([
@@ -61,7 +64,7 @@ if ($existing) {
 }
 
 // Phone must be unused (matches mobile_check.php semantics).
-$checkmob = $rstate->query("SELECT id FROM tbl_user WHERE mobile='" . $mobile . "' AND ccode='" . $ccode . "'")->num_rows;
+$checkmob = findUserByPhone($rstate, $rawMobile, $rawCcode) !== null;
 if ($checkmob != 0) {
     echo json_encode([
         "ResponseCode" => "401",

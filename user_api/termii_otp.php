@@ -11,7 +11,8 @@ $termii = new Termii();
 
 $data = json_decode(file_get_contents('php://input') , true);
 header('Content-type: text/json');
-$mobile = $data['mobile'];
+$mobile = $data['mobile'] ?? '';
+$ccode = $data['ccode'] ?? '';
 if ($mobile == '') {
     $returnArr = array(
         "ResponseCode" => "401",
@@ -19,7 +20,12 @@ if ($mobile == '') {
         "ResponseMsg" => "The mobile number field is required"
     );
 } else {
-    $to = $mobile; // twilio trial verified number
+    if ($ccode !== '') {
+        $phone = normalizePhoneIdentity($mobile, $ccode);
+        $to = $phone['ccode'] . $phone['mobile'];
+    } else {
+        $to = preg_replace('/\D+/', '', (string) $mobile);
+    }
     $otp = rand(111111, 999999);
 
     $settings = $rstate->query("SELECT * FROM `tbl_setting` ORDER BY `id` DESC LIMIT 1 ");
