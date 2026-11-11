@@ -74,12 +74,12 @@ if (! function_exists('normalizePhoneIdentity')) {
     }
 }
 
-if (! function_exists('findUserByPhone')) {
-    function findUserByPhone(mysqli $database, $mobile, $countryCode, bool $activeOnly = false)
+if (! function_exists('findUsersByPhone')) {
+    function findUsersByPhone(mysqli $database, $mobile, $countryCode, bool $activeOnly = false): array
     {
         $phone = normalizePhoneIdentity($mobile, $countryCode);
         if ($phone['mobile'] === '' || $phone['ccode'] === '') {
-            return null;
+            return [];
         }
 
         $quote = static function ($value) use ($database) {
@@ -97,10 +97,27 @@ if (! function_exists('findUserByPhone')) {
         $query = $database->query(
             "SELECT * FROM tbl_user WHERE ((mobile IN ($mobiles) AND ccode IN ($codes))" .
             " OR ($normalizedMobileColumn IN ($digitMobileSql) AND $normalizedCodeColumn='" .
-            $database->real_escape_string($phone['ccode']) . "'))$status ORDER BY id DESC LIMIT 1"
+            $database->real_escape_string($phone['ccode']) . "'))$status ORDER BY id DESC"
         );
 
-        return $query ? $query->fetch_assoc() : null;
+        if (! $query) {
+            return [];
+        }
+
+        $users = [];
+        while ($user = $query->fetch_assoc()) {
+            $users[] = $user;
+        }
+
+        return $users;
+    }
+}
+
+if (! function_exists('findUserByPhone')) {
+    function findUserByPhone(mysqli $database, $mobile, $countryCode, bool $activeOnly = false)
+    {
+        $users = findUsersByPhone($database, $mobile, $countryCode, $activeOnly);
+        return $users[0] ?? null;
     }
 }
 

@@ -3,11 +3,13 @@ require dirname(dirname(__FILE__)) . '/include/reconfig.php';
 require dirname(dirname(__FILE__)) . '/include/auth.php';
 $data = json_decode(file_get_contents('php://input'), true);
 header('Content-type: text/json');
+header('X-Auth-Version: phone-normalization-v2');
 $identifier = trim((string) ($data['mobile'] ?? ''));
 $password = (string) ($data['password'] ?? '');
 $ccode = trim((string) ($data['ccode'] ?? ''));
 
 if ($identifier === '' || $password === '' || ($ccode === '' && strpos($identifier, '@') === false)) {
+    http_response_code(401);
     $returnArr = [
         "ResponseCode" => "401",
         "Result"       => "false",
@@ -22,8 +24,20 @@ if ($identifier === '' || $password === '' || ($ccode === '' && strpos($identifi
         $email = $rstate->real_escape_string(strtolower($identifier));
         $query = $rstate->query("SELECT * FROM tbl_user WHERE LOWER(email)='" . $email . "' AND status=1 ORDER BY id DESC LIMIT 1");
         $user = $query ? $query->fetch_assoc() : null;
+        $users = $user ? [$user] : [];
     } else {
-        $user = findUserByPhone($rstate, $identifier, $ccode, true);
+        // Legacy clients stored equivalent phone formats in separate rows. Check
+        // every active match so a newer duplicate cannot hide the valid account.
+        $users = findUsersByPhone($rstate, $identifier, $ccode, true);
+        $user = null;
+        foreach ($users as $candidate) {
+            $candidateHash = (string) ($candidate['password'] ?? '');
+            if (password_verify($password, $candidateHash) ||
+                (strlen($candidateHash) === 32 && hash_equals(strtolower($candidateHash), md5($password)))) {
+                $user = $candidate;
+                break;
+            }
+        }
     }
 
     $passwordMatches = $user && (
@@ -83,10 +97,15 @@ if ($identifier === '' || $password === '' || ($ccode === '' && strpos($identifi
             "ResponseMsg"  => "Login successfully!",
         ];
     } elseif (! $passwordMatches) {
+        http_response_code(401);
+        if (strpos($identifier, '@') === false) {
+            $lookupKey = substr(hash('sha256', $phone['ccode'] . '|' . $phone['mobile']), 0, 12);
+            logger('phone_login_failed lookup=' . $lookupKey . ' active_matches=' . count($users));
+        }
         $returnArr = [
             "ResponseCode" => "401",
             "Result"       => "false",
-            "ResponseMsg"  => "Invalid Mobile Number Or Email Address or Password!",
+            "ResponseMsg"  => "Invalid phone number or password",
         ];
     }
 }
