@@ -14,6 +14,7 @@
 require dirname(dirname(__FILE__)) . '/include/reconfig.php';
 require dirname(dirname(__FILE__)) . '/include/estate.php';
 require dirname(dirname(__FILE__)) . '/include/auth.php';
+require_once __DIR__ . '/registration_otp.php';
 header('Content-type: text/json');
 
 $data = json_decode(file_get_contents('php://input'), true);
@@ -38,8 +39,9 @@ $mobile    = $phone['mobile'];
 $ccode     = $phone['ccode'];
 
 if ($provider === '' || $token === '' || $mobile === '' || $ccode === '') {
+    http_response_code(422);
     echo json_encode([
-        "ResponseCode" => "401",
+        "ResponseCode" => "422",
         "Result"       => "false",
         "ResponseMsg"  => "Something Went Wrong!",
     ]);
@@ -50,6 +52,7 @@ $identity = verifySocialToken($provider, $token);
 
 // A false result means the token itself is invalid (bad signature/iss/aud/exp).
 if ($identity === false) {
+    http_response_code(401);
     echo json_encode([
         "ResponseCode" => "401",
         "Result"       => "false",
@@ -99,6 +102,7 @@ if ($existing) {
 // New account: we need an email. Apple omits it on repeat auth and the client
 // didn't forward one -> ask the app to send the email captured at first sign-in.
 if ($email_plain === '') {
+    http_response_code(422);
     echo json_encode([
         "ResponseCode" => "422",
         "Result"       => "false",
@@ -121,11 +125,21 @@ $refercode              = isset($data['refercode']) ? trim(strip_tags(mysqli_rea
 
 // Phone must still be unused.
 if (findUserByPhone($rstate, $rawMobile, $rawCcode) !== null) {
+    http_response_code(409);
     echo json_encode([
-        "ResponseCode" => "401",
+        "ResponseCode" => "409",
         "Result"       => "false",
         "ResponseMsg"  => "Mobile Number Already Used!",
     ]);
+    exit;
+}
+
+try {
+    $verified = registrationOtpConsume($rstate, (string) ($data['challenge_id'] ?? ''), (string) ($data['otp'] ?? ''), $mobile, $ccode, 'social', $provider . ':' . $identity['social_id']);
+} catch (Throwable $e) { $verified = false; }
+if (! $verified) {
+    http_response_code(422);
+    echo json_encode(['ResponseCode'=>'422','Result'=>'false','ResponseMsg'=>'Invalid, expired, or already used verification code. Please request a new OTP.']);
     exit;
 }
 

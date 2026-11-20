@@ -12,7 +12,9 @@
 require dirname(dirname(__FILE__)) . '/include/reconfig.php';
 require dirname(dirname(__FILE__)) . '/include/estate.php';
 require dirname(__FILE__) . '/otp_helper.php';
+require_once __DIR__ . '/registration_otp.php';
 header('Content-type: text/json');
+http_response_code(200);
 
 $data     = json_decode(file_get_contents('php://input'), true);
 $provider = isset($data['provider']) ? strtolower(trim($data['provider'])) : '';
@@ -24,8 +26,9 @@ $mobile    = $phone['mobile'];
 $ccode     = $phone['ccode'];
 
 if ($provider === '' || $token === '' || $mobile === '' || $ccode === '') {
+    http_response_code(422);
     echo json_encode([
-        "ResponseCode" => "401",
+        "ResponseCode" => "422",
         "Result"       => "false",
         "ResponseMsg"  => "Something Went Wrong!",
     ]);
@@ -35,6 +38,7 @@ if ($provider === '' || $token === '' || $mobile === '' || $ccode === '') {
 $identity = verifySocialToken($provider, $token);
 
 if ($identity === false) {
+    http_response_code(401);
     echo json_encode([
         "ResponseCode" => "401",
         "Result"       => "false",
@@ -55,6 +59,7 @@ if (! $existing && $identity['email']) {
 }
 
 if ($existing) {
+    http_response_code(409);
     echo json_encode([
         "ResponseCode" => "409",
         "Result"       => "false",
@@ -66,15 +71,18 @@ if ($existing) {
 // Phone must be unused (matches mobile_check.php semantics).
 $checkmob = findUserByPhone($rstate, $rawMobile, $rawCcode) !== null;
 if ($checkmob != 0) {
+    http_response_code(409);
     echo json_encode([
-        "ResponseCode" => "401",
+        "ResponseCode" => "409",
         "Result"       => "false",
         "ResponseMsg"  => "Mobile Number Already Used!",
     ]);
     exit;
 }
 
-$otp  = rand(111111, 999999);
+$identityKey = $provider . ':' . $identity['social_id'];
+try { [$challenge, $otp] = registrationOtpCreate($rstate, $mobile, $ccode, 'social', $identityKey); }
+catch (Throwable $e) { http_response_code(500); echo json_encode(['ResponseCode'=>'500','Result'=>'false','ResponseMsg'=>'OTP service is unavailable']); exit; }
 $dial = preg_replace('/[^0-9]/', '', $ccode . $mobile);
 
 if (sendOtpViaProvider($dial, $otp)) {
@@ -82,11 +90,13 @@ if (sendOtpViaProvider($dial, $otp)) {
         "ResponseCode" => "200",
         "Result"       => "true",
         "ResponseMsg"  => "OTP sent successfully",
-        "otp"          => $otp,
+        "challenge_id" => $challenge,
     ]);
 } else {
+    registrationOtpCancel($rstate, $challenge);
+    http_response_code(503);
     echo json_encode([
-        "ResponseCode" => "401",
+        "ResponseCode" => "503",
         "Result"       => "false",
         "ResponseMsg"  => "We could not send the OTP at this time. Please try again.",
     ]);

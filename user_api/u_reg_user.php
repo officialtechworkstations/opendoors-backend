@@ -2,6 +2,7 @@
 require dirname(dirname(__FILE__)) . '/include/reconfig.php';
 require dirname(dirname(__FILE__)) . '/include/estate.php';
 require dirname(dirname(__FILE__)) . '/include/auth.php';
+require_once __DIR__ . '/registration_otp.php';
 header('Content-type: text/json');
 $data = json_decode(file_get_contents('php://input'), true);
 function generate_random()
@@ -16,11 +17,11 @@ function generate_random()
     }
 }
 
-if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $data['ccode'] == '' or $data['email'] == '') {
+if (! is_array($data) || trim((string) ($data['name'] ?? '')) === '' || trim((string) ($data['mobile'] ?? '')) === '' || (string) ($data['password'] ?? '') === '' || trim((string) ($data['ccode'] ?? '')) === '' || trim((string) ($data['email'] ?? '')) === '') {
     $returnArr = array(
-        "ResponseCode" => "401",
+        "ResponseCode" => "422",
         "Result" => "false",
-        "ResponseMsg" => "Something Went Wrong!"
+        "ResponseMsg" => "Name, email, mobile, country code, and password are required."
     );
 } else {
     
@@ -30,8 +31,8 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
     $mobile    = $rstate->real_escape_string($phone['mobile']);
     $ccode     = $rstate->real_escape_string($phone['ccode']);
     $password  = password_hash(trim(strip_tags($data['password'])), PASSWORD_BCRYPT);
-    $refercode = trim(strip_tags(mysqli_real_escape_string($rstate, $data['refercode'])));
-    $accept_newsletter = trim(strip_tags(mysqli_real_escape_string($rstate, $data['accept_newsletter']))) ? 1 : 0;
+    $refercode = trim(strip_tags(mysqli_real_escape_string($rstate, (string) ($data['refercode'] ?? ''))));
+    $accept_newsletter = ! empty($data['accept_newsletter']) ? 1 : 0;
     $accept_privacy_policy  = ! empty($data['accept_privacy_policy']) ? 1 : 0;
     $accept_terms_condition = ! empty($data['accept_terms_condition']) ? 1 : 0;
     
@@ -52,6 +53,12 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
             "ResponseMsg" => "Email Address Already Used!"
         );
     } else {
+        try {
+            $verified = registrationOtpConsume($rstate, (string) ($data['challenge_id'] ?? ''), (string) ($data['otp'] ?? ''), $phone['mobile'], $phone['ccode'], 'standard');
+        } catch (Throwable $e) { $verified = false; }
+        if (! $verified) {
+            $returnArr = ['ResponseCode'=>'422','Result'=>'false','ResponseMsg'=>'Invalid, expired, or already used verification code. Please request a new OTP.'];
+        } else {
         
         if ($refercode != '') {
             $c_refer = $rstate->query("select * from tbl_user where refercode=" . $refercode . "")->num_rows;
@@ -185,7 +192,9 @@ if ($data['name'] == '' or $data['mobile'] == '' or $data['password'] == '' or $
             
         }
         
+        }
     }
 }
 
+http_response_code((int) $returnArr['ResponseCode']);
 echo json_encode($returnArr);

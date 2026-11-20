@@ -20,3 +20,5 @@ analysis.md
 PROJECT_STRUCTURE.md
 prd.md
 run_migrations.php
+*.md
+!ReadMe.md

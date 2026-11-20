@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS `registration_otp` (
+    `challenge_id` CHAR(32) NOT NULL PRIMARY KEY,
+    `mobile` VARCHAR(32) NOT NULL,
+    `ccode` VARCHAR(8) NOT NULL,
+    `purpose` VARCHAR(16) NOT NULL,
+    `identity_hash` CHAR(64) NOT NULL,
+    `otp_hash` VARCHAR(255) NOT NULL,
+    `attempts` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    `expires_at` DATETIME NOT NULL,
+    `consumed_at` DATETIME NULL,
+    INDEX `registration_otp_expires_at` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
