@@ -42,18 +42,29 @@ $email      = $identity['email'] ? $rstate->real_escape_string(strtolower(trim($
 
 // 1) Match on the social identity first.
 $user = $rstate->query(
-    "SELECT * FROM tbl_user WHERE social_provider='" . $provider . "' AND social_id='" . $social_id . "' AND status = 1"
+    "SELECT * FROM tbl_user WHERE social_provider='" . $provider . "' AND social_id='" . $social_id . "' LIMIT 1"
 )->fetch_assoc();
+if ($user && (int) $user['status'] !== 1) {
+    http_response_code(403);
+    echo json_encode(['ResponseCode'=>'403','Result'=>'false','ErrorCode'=>'ACCOUNT_DISABLED','ResponseMsg'=>'This account is disabled. Please contact support.']);
+    exit;
+}
 
 // A matching email is not proof that this provider identity owns the account.
 if (! $user && $email !== '') {
     $existing = $rstate->query("SELECT id, status FROM tbl_user WHERE LOWER(TRIM(email))='" . $email . "' LIMIT 1")->fetch_assoc();
     if ($existing) {
+        if ((int) $existing['status'] !== 1) {
+            http_response_code(403);
+            echo json_encode(['ResponseCode'=>'403','Result'=>'false','ErrorCode'=>'ACCOUNT_DISABLED','ResponseMsg'=>'This account is disabled. Please contact support.']);
+            exit;
+        }
         http_response_code(409);
         echo json_encode([
             'ResponseCode' => '409',
+            'ErrorCode' => 'SOCIAL_ACCOUNT_NOT_LINKED',
             'Result' => 'false',
-            'ResponseMsg' => 'An account with this email exists. Sign in with your existing method to link Google or Apple.',
+            'ResponseMsg' => 'An account exists for this email. Sign in using your existing method to link ' . ucfirst($provider) . '.',
         ]);
         exit;
     }

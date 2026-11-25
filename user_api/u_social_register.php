@@ -70,7 +70,13 @@ $email_plain = $identity['email'] ?: (isset($data['email']) ? strtolower(trim($d
 $email       = $rstate->real_escape_string($email_plain);
 
 // Only the exact provider identity may authenticate an existing account.
-$existing = $rstate->query("SELECT * FROM tbl_user WHERE social_provider='" . $provider . "' AND social_id='" . $social_id . "' AND status=1 LIMIT 1")->fetch_assoc();
+$existing = $rstate->query("SELECT * FROM tbl_user WHERE social_provider='" . $provider . "' AND social_id='" . $social_id . "' LIMIT 1")->fetch_assoc();
+
+if ($existing && (int) $existing['status'] !== 1) {
+    http_response_code(403);
+    echo json_encode(['ResponseCode'=>'403','Result'=>'false','ErrorCode'=>'ACCOUNT_DISABLED','ResponseMsg'=>'This account is disabled. Please contact support.']);
+    exit;
+}
 
 if ($existing) {
     $c = $rstate->query("SELECT * FROM tbl_user WHERE id=" . (int) $existing['id'])->fetch_assoc();
@@ -88,9 +94,15 @@ if ($existing) {
     exit;
 }
 
-if ($email !== '' && $rstate->query("SELECT id FROM tbl_user WHERE LOWER(TRIM(email))='" . $email . "' LIMIT 1")->num_rows) {
+$emailAccount = $email !== '' ? $rstate->query("SELECT id, status FROM tbl_user WHERE LOWER(TRIM(email))='" . $email . "' LIMIT 1")->fetch_assoc() : null;
+if ($emailAccount && (int) $emailAccount['status'] !== 1) {
+    http_response_code(403);
+    echo json_encode(['ResponseCode'=>'403','Result'=>'false','ErrorCode'=>'ACCOUNT_DISABLED','ResponseMsg'=>'This account is disabled. Please contact support.']);
+    exit;
+}
+if ($emailAccount) {
     http_response_code(409);
-    echo json_encode(['ResponseCode'=>'409','Result'=>'false','ResponseMsg'=>'An account with this email exists. Sign in with your existing method to link Google or Apple.']);
+    echo json_encode(['ResponseCode'=>'409','Result'=>'false','ErrorCode'=>'SOCIAL_ACCOUNT_NOT_LINKED','ResponseMsg'=>'An account exists for this email. Sign in using your existing method to link ' . ucfirst($provider) . '.']);
     exit;
 }
 

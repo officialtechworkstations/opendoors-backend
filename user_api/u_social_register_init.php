@@ -49,21 +49,38 @@ if ($identity === false) {
 
 // Already registered? Tell the app to log in instead.
 $social_id = $rstate->real_escape_string($identity['social_id']);
-$existing  = $rstate->query(
-    "SELECT id FROM tbl_user WHERE social_provider='" . $provider . "' AND social_id='" . $social_id . "'"
-)->num_rows;
+$linkedAccount = $rstate->query(
+    "SELECT id, status FROM tbl_user WHERE social_provider='" . $provider . "' AND social_id='" . $social_id . "' LIMIT 1"
+)->fetch_assoc();
 
-if (! $existing && $identity['email']) {
-    $email    = $rstate->real_escape_string(strtolower(trim($identity['email'])));
-    $existing = $rstate->query("SELECT id FROM tbl_user WHERE LOWER(TRIM(email))='" . $email . "'")->num_rows;
+if ($linkedAccount && (int) $linkedAccount['status'] !== 1) {
+    http_response_code(403);
+    echo json_encode(['ResponseCode'=>'403','Result'=>'false','ErrorCode'=>'ACCOUNT_DISABLED','ResponseMsg'=>'This account is disabled. Please contact support.']);
+    exit;
+}
+if ($linkedAccount) {
+    http_response_code(409);
+    echo json_encode(['ResponseCode'=>'409','Result'=>'false','ErrorCode'=>'SOCIAL_ACCOUNT_EXISTS','ResponseMsg'=>'Account already linked. Please sign in with ' . ucfirst($provider) . '.']);
+    exit;
 }
 
-if ($existing) {
+if ($identity['email']) {
+    $email    = $rstate->real_escape_string(strtolower(trim($identity['email'])));
+    $existing = $rstate->query("SELECT id, status FROM tbl_user WHERE LOWER(TRIM(email))='" . $email . "' LIMIT 1")->fetch_assoc();
+}
+
+if (! empty($existing) && (int) $existing['status'] !== 1) {
+    http_response_code(403);
+    echo json_encode(['ResponseCode'=>'403','Result'=>'false','ErrorCode'=>'ACCOUNT_DISABLED','ResponseMsg'=>'This account is disabled. Please contact support.']);
+    exit;
+}
+if (! empty($existing)) {
     http_response_code(409);
     echo json_encode([
         "ResponseCode" => "409",
+        "ErrorCode"    => "SOCIAL_ACCOUNT_NOT_LINKED",
         "Result"       => "false",
-        "ResponseMsg"  => "An account with this identity or email exists. Sign in with your existing method to link Google or Apple.",
+        "ResponseMsg"  => "An account exists for this email. Sign in using your existing method to link " . ucfirst($provider) . ".",
     ]);
     exit;
 }
