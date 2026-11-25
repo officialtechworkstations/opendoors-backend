@@ -54,8 +54,8 @@ $existing  = $rstate->query(
 )->num_rows;
 
 if (! $existing && $identity['email']) {
-    $email    = $rstate->real_escape_string($identity['email']);
-    $existing = $rstate->query("SELECT id FROM tbl_user WHERE email='" . $email . "'")->num_rows;
+    $email    = $rstate->real_escape_string(strtolower(trim($identity['email'])));
+    $existing = $rstate->query("SELECT id FROM tbl_user WHERE LOWER(TRIM(email))='" . $email . "'")->num_rows;
 }
 
 if ($existing) {
@@ -63,7 +63,7 @@ if ($existing) {
     echo json_encode([
         "ResponseCode" => "409",
         "Result"       => "false",
-        "ResponseMsg"  => "Account already exists. Please log in.",
+        "ResponseMsg"  => "An account with this identity or email exists. Sign in with your existing method to link Google or Apple.",
     ]);
     exit;
 }

@@ -69,21 +69,10 @@ $social_id = $rstate->real_escape_string($identity['social_id']);
 $email_plain = $identity['email'] ?: (isset($data['email']) ? strtolower(trim($data['email'])) : '');
 $email       = $rstate->real_escape_string($email_plain);
 
-// Already registered? Match on the social identity first (works even when the
-// token carries no email), then on email if we have one. Auto-link & log in.
-$lookup = "SELECT * FROM tbl_user WHERE (social_provider='" . $provider . "' AND social_id='" . $social_id . "')";
-if ($email !== '') {
-    $lookup .= " OR email='" . $email . "'";
-}
-$lookup .= " LIMIT 1";
-$existing = $rstate->query($lookup)->fetch_assoc();
+// Only the exact provider identity may authenticate an existing account.
+$existing = $rstate->query("SELECT * FROM tbl_user WHERE social_provider='" . $provider . "' AND social_id='" . $social_id . "' AND status=1 LIMIT 1")->fetch_assoc();
 
 if ($existing) {
-    if ($existing['social_id'] === null || $existing['social_id'] === '') {
-        $rstate->query(
-            "UPDATE tbl_user SET social_provider='" . $provider . "', social_id='" . $social_id . "' WHERE id=" . (int) $existing['id']
-        );
-    }
     $c = $rstate->query("SELECT * FROM tbl_user WHERE id=" . (int) $existing['id'])->fetch_assoc();
     $tokenData = issueToken((int)$existing['id']);
     echo json_encode([
@@ -96,6 +85,12 @@ if ($existing) {
         "type"         => "user",
         "ResponseMsg"  => "Login successfully!",
     ]);
+    exit;
+}
+
+if ($email !== '' && $rstate->query("SELECT id FROM tbl_user WHERE LOWER(TRIM(email))='" . $email . "' LIMIT 1")->num_rows) {
+    http_response_code(409);
+    echo json_encode(['ResponseCode'=>'409','Result'=>'false','ResponseMsg'=>'An account with this email exists. Sign in with your existing method to link Google or Apple.']);
     exit;
 }
 

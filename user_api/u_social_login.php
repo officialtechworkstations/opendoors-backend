@@ -5,8 +5,8 @@
  * Body: { "provider": "google|apple", "token": "<id_token>" }
  *
  * Verifies the provider ID token server-side, then resolves the user by
- * (social_provider, social_id) and falls back to a verified-email match
- * (auto-linking the social identity to the existing account).
+ * (social_provider, social_id). A matching email without that identity needs
+ * an authenticated account-linking flow; an ID token alone cannot link it.
  */
 require dirname(dirname(__FILE__)) . '/include/reconfig.php';
 require dirname(dirname(__FILE__)) . '/include/estate.php';
@@ -38,35 +38,33 @@ if ($identity === false) {
 }
 
 $social_id = $rstate->real_escape_string($identity['social_id']);
-$email      = $identity['email'] ? $rstate->real_escape_string($identity['email']) : '';
+$email      = $identity['email'] ? $rstate->real_escape_string(strtolower(trim($identity['email']))) : '';
 
 // 1) Match on the social identity first.
 $user = $rstate->query(
     "SELECT * FROM tbl_user WHERE social_provider='" . $provider . "' AND social_id='" . $social_id . "' AND status = 1"
 )->fetch_assoc();
 
-// 2) Fall back to a verified-email match and auto-link the social identity.
-if (! $user && $email !== '' && $identity['email_verified']) {
-    $user = $rstate->query(
-        "SELECT * FROM tbl_user WHERE email='" . $email . "' AND status = 1"
-    )->fetch_assoc();
-
-    if ($user) {
-        $rstate->query(
-            "UPDATE tbl_user SET social_provider='" . $provider . "', social_id='" . $social_id . "' WHERE id=" . (int) $user['id']
-        );
-        $user['social_provider'] = $provider;
-        $user['social_id']       = $identity['social_id'];
+// A matching email is not proof that this provider identity owns the account.
+if (! $user && $email !== '') {
+    $existing = $rstate->query("SELECT id, status FROM tbl_user WHERE LOWER(TRIM(email))='" . $email . "' LIMIT 1")->fetch_assoc();
+    if ($existing) {
+        http_response_code(409);
+        echo json_encode([
+            'ResponseCode' => '409',
+            'Result' => 'false',
+            'ResponseMsg' => 'An account with this email exists. Sign in with your existing method to link Google or Apple.',
+        ]);
+        exit;
     }
 }
 
 if (! $user) {
+    http_response_code(404);
     echo json_encode([
         "ResponseCode" => "404",
         "Result"       => "false",
         "ResponseMsg"  => "Account not registered. Please sign up.",
-        "email"        => $identity['email'],
-        "name"         => $identity['name'],
     ]);
     exit;
 }
